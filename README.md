@@ -39,20 +39,24 @@ Pass the library path **without** `.so`: SQLite adds the suffix itself (see the 
 
 ## What you can do
 
-**Search page** (`/search`): type a question and optionally limit it to one source. Results are cards with the document title, the heading path inside the document, the matching chunk with your words highlighted, the source link and the score. Every search links to the same query as SQL.
+**Search page** (`/search`): type a question and optionally limit it to one source. Results are cards with the document title, the heading path inside the document, the matching chunk with your words highlighted, the source link and the score. When the hit is very short, usually a bare heading, the card also shows the text that follows it in the same section. Each passage appears once: a hit already shown on a better card (as its context, or as an overlapping piece of the same paragraph) or with the same text as a better card is left out. Every search links to the same query as SQL.
 
 **Canned queries** (`/demo`, hybrid search only), usable from the browser or as JSON (`/demo/search.json?q=...&collection=&_shape=array`):
 
 | Query | Ranking | Score |
 | --- | --- | --- |
-| `search` | Hybrid: `docs_chunks MATCH :q`, vector and BM25 fused by Reciprocal Rank Fusion | RRF score, higher is better (at most 2/61) |
+| `search` | Hybrid: `docs_chunks MATCH :q`, vector and BM25 fused by Reciprocal Rank Fusion; context for short hits, each passage once (rule below) | RRF score, higher is better (at most 2/61) |
 | `search_documents` | Hybrid, one row per document (`docs MATCH :q`) | RRF score of the best chunk |
 | `chunks_with_document` | Hybrid chunks joined to `docs` and `doc_info`, with positions | RRF score |
 | `document_chunks` | All chunks of one `doc_id`, in order (no search) | none |
 | `model` | `ragite_default_model()` and `ragite_table_model('docs')` | none |
 | `embed` | `ragite_embed('docs', :text, :role)`: dimensions and first bytes | none |
 
+**Rule for `search`** ([SPEC](SPEC.md) D9): A short hit (under 80 characters, usually a bare heading) gets the next chunks of the same document and section as context: chunks that start after it, whose heading path begins with the hit's heading path, and that have at least 40 characters; up to two, and only until the card holds 200 characters. A card covers the range from the hit's start to the end of its last context chunk. Cards are taken in score order, and a hit is dropped when its card overlaps the range of a better card of the same document (a heading and the paragraph shown under it, or the overlapping pieces of a split paragraph) or when its text, context included, equals a better card's text after trimming and lower-casing (the same sentence on two pages). The query looks at the best 60 hits and returns at most 20 cards.
+
 All of them use only ragite's public interface: the Document table, its `_chunks` companion and the `ragite_*` functions. `collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
+
+**Known limit of the source filter** ([pihme/ragite#49](https://github.com/pihme/ragite/issues/49)): ragite takes a fixed number of best candidates from all sources, fuses them, and only then does the query keep the rows of the chosen source. A source that ranks lower overall can come back with few or no passages even though it has matching text; for example `virtual table` limited to `ragite-docs` returns nothing, although 18 ragite-docs chunks contain that phrase. The search page says so whenever a source filter is active. Searching all sources, or rephrasing, helps until ragite lets filters reach past the candidate depth.
 
 **More SQL**: [examples/](examples/) has runnable `.sql` files for every part of ragite's public interface: create a table, insert each format, update and delete, search documents and chunks, join a chunk to its document, show the model, embed text.
 

@@ -92,7 +92,8 @@ async def test_only_hybrid_queries_are_offered(ds):
     assert sorted(q["name"] for q in queries) == [
         "chunks_with_document", "document_chunks", "embed", "model", "search", "search_documents"]
     for q in queries:
-        assert "docs_vec" not in q["sql"] and "docs_fts" not in q["sql"]
+        for storage in ("docs_vec", "docs_fts", "docs_chunk_rows", "docs_documents", "docs_model"):
+            assert storage not in q["sql"], (q["name"], storage)
 
 
 @pytest.mark.asyncio
@@ -101,6 +102,7 @@ async def test_search_page_and_assets(ds):
     assert page.status_code == 200
     assert 'id="rs-q"' in page.text and "/static/search.js" in page.text
     assert 'name="mode"' not in page.text
+    assert 'id="rs-filter-hint"' in page.text
     for asset in ("search.js", "search.css"):
         assert (await ds.client.get(f"/static/{asset}")).status_code == 200
 
@@ -141,3 +143,46 @@ async def test_few_near_empty_chunks(ds):
     nbsp = await ds.client.get("/demo.json", params={
         "sql": "SELECT count(*) AS n FROM docs_chunks WHERE instr(chunk, char(160)) > 0", "_shape": "array"})
     assert nbsp.json()[0]["n"] == 0
+
+
+PASSAGE_QUERIES = ["vacuum", "Who uses B-trees and why?", "WAL", "backup", "What is write-ahead logging?"]
+
+
+@pytest.mark.asyncio
+async def test_short_hits_come_with_context(ds):
+    found = await rows(ds, "search", q="vacuum")
+    heading = next(r for r in found if r["chunk"] == "VACUUM")
+    ctx = json.loads(heading["context"])
+    assert 1 <= len(ctx) <= 2 and all(len(t) >= 40 for t in ctx), ctx
+    assert ctx[0].startswith("The VACUUM command rebuilds the database file")
+    for r in found:
+        if len(r["chunk"]) >= 80:
+            assert json.loads(r["context"]) == [], r["chunk"][:40]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("q", PASSAGE_QUERIES)
+async def test_each_passage_is_shown_once(ds, q):
+    found = await rows(ds, "search", q=q)
+    assert len(found) == 20
+    # No two cards of one document overlap (a card is its chunk plus its context).
+    spans = sorted((r["doc_id"], r["start"], r["end"]) for r in found)
+    for (d1, s1, e1), (d2, s2, e2) in zip(spans, spans[1:]):
+        assert d1 != d2 or e1 <= s2, (d1, s1, e1, s2, e2)
+    # No card repeats the text of another card, and no hit is also shown as another card's context.
+    keys = [" ".join([r["chunk"], *json.loads(r["context"])]).strip().lower() for r in found]
+    assert len(set(keys)) == len(keys)
+    shown = [t for r in found for t in json.loads(r["context"])]
+    assert not set(r["chunk"] for r in found) & set(shown)
+    assert [r["score"] for r in found] == sorted((r["score"] for r in found), reverse=True)
+
+
+@pytest.mark.asyncio
+async def test_source_filter_limit_is_real(ds):
+    # Documents the limit the search page warns about (pihme/ragite#49): the filter runs after fusion.
+    # When ragite fixes it, this test fails and the hint can go.
+    assert await rows(ds, "search", q="virtual table", collection="ragite-docs") == []
+    resp = await ds.client.get("/demo.json", params={"sql": (
+        "SELECT count(*) AS n FROM docs_chunks c JOIN doc_info i ON i.doc_id = c.doc_id "
+        "WHERE i.collection = 'ragite-docs' AND lower(c.chunk) LIKE '%virtual table%'"), "_shape": "array"})
+    assert resp.json()[0]["n"] > 0

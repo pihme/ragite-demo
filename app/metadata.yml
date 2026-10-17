@@ -31,20 +31,73 @@ databases:
       docs_fts: {hidden: true}
     queries:
       search:
-        title: Search chunks (hybrid)
+        title: Search passages (hybrid)
         description: >-
-          Hybrid search: vector similarity and BM25 full-text ranking fused with Reciprocal Rank Fusion.
-          collection is optional (sqlite-docs, wikipedia or ragite-docs).
+          Hybrid search: vector similarity and BM25 full-text ranking fused with Reciprocal Rank Fusion,
+          on docs_chunks. A short hit (under 80 characters, often a bare heading) gets the next chunks
+          of the same section as context (chunks of at least 40 characters, up to 2, until the card
+          has 200 characters). Each passage is shown once: a hit is dropped when its text range
+          overlaps a better card of the same document (its chunk plus context) or when its text
+          equals a better card's text. collection is optional (sqlite-docs, wikipedia or ragite-docs).
         sql: |-
-          with hits as materialized (
-            select rowid as chunk_id, doc_id, chunk, heading_path, score
+          with recursive
+          hits as materialized (
+            select rowid as chunk_id, doc_id, start, "end", chunk, heading_path, score
             from docs_chunks
             where docs_chunks match :q
+          ),
+          ranked as materialized (
+            select hits.*, i.title, i.url, i.collection,
+                   row_number() over (order by hits.score desc, hits.chunk_id) as r
+            from hits join doc_info i on i.doc_id = hits.doc_id
+            where :collection = '' or i.collection = :collection
+          ),
+          top as materialized (
+            select * from ranked where r <= 60
+          ),
+          following as (
+            select t.chunk_id as hit, c.chunk, c."end",
+                   row_number() over w as n,
+                   length(t.chunk) + coalesce(sum(length(c.chunk)) over (w rows between unbounded preceding and 1 preceding), 0) as shown_before
+            from top t
+            join docs_chunks c on c.doc_id = t.doc_id
+            where length(t.chunk) < 80
+              and c.start >= t."end"
+              and length(c.chunk) >= 40
+              and substr(c.heading_path, 1, length(t.heading_path) - 1) = substr(t.heading_path, 1, length(t.heading_path) - 1)
+            window w as (partition by t.chunk_id order by c.start, c.rowid)
+          ),
+          context as (
+            select hit, json_group_array(chunk) as context, max("end") as ctx_end, group_concat(chunk, ' ') as ctx_text
+            from (select * from following where n <= 3 and shown_before < 200 order by hit, n)
+            group by hit
+          ),
+          cards as materialized (
+            select t.*, coalesce(x.context, '[]') as context, max(t."end", coalesce(x.ctx_end, 0)) as card_end,
+                   lower(trim(t.chunk || ' ' || coalesce(x.ctx_text, ''))) as card_key
+            from top t left join context x on x.hit = t.chunk_id
+          ),
+          walk(r, kept, keep) as (
+            select 0, json('[]'), 0
+            union all
+            select c.r,
+                   case when not exists (select 1 from json_each(w.kept) j
+                                         where (json_extract(j.value, '$.d') = c.doc_id and json_extract(j.value, '$.s') < c.card_end
+                                                and json_extract(j.value, '$.e') > c.start)
+                                            or json_extract(j.value, '$.k') = c.card_key)
+                        then json_insert(w.kept, '$[#]', json_object('d', c.doc_id, 's', c.start, 'e', c.card_end, 'k', c.card_key))
+                        else w.kept end,
+                   not exists (select 1 from json_each(w.kept) j
+                               where (json_extract(j.value, '$.d') = c.doc_id and json_extract(j.value, '$.s') < c.card_end
+                                      and json_extract(j.value, '$.e') > c.start)
+                                  or json_extract(j.value, '$.k') = c.card_key)
+            from walk w join cards c on c.r = w.r + 1
           )
-          select i.title, i.url, i.collection, hits.heading_path, hits.chunk, round(hits.score, 5) as score
-          from hits join doc_info i on i.doc_id = hits.doc_id
-          where :collection = '' or i.collection = :collection
-          order by hits.score desc, hits.chunk_id
+          select c.title, c.url, c.collection, c.heading_path, c.chunk, c.context, round(c.score, 5) as score,
+                 c.doc_id, c.start, c.card_end as "end"
+          from walk w join cards c on c.r = w.r
+          where w.keep
+          order by c.r
           limit 20
       search_documents:
         title: Search documents (hybrid)
