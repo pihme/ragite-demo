@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Run every example through the sqlite3 shell, as the README shows. Stops at the first error.
+# Usage: scripts/run-examples   (from the repository root, with ./libragite.so and app/demo.db)
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+for f in examples/*.sql; do
+  echo "== $f"
+  sqlite3 -bail -header :memory: < "$f"
+done
+for f in examples/demo/*.sql; do
+  echo "== $f"
+  sqlite3 -bail -header -readonly app/demo.db < "$f"
+done

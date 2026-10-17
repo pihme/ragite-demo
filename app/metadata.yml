@@ -1,0 +1,182 @@
+title: ragite demo
+description_html: |-
+  Hybrid search over the SQLite documentation, a few Wikipedia articles and the ragite docs,
+  run by the <a href="https://github.com/pihme/ragite">ragite</a> SQLite extension.
+  <strong><a href="/search">Open the search page</a></strong> or use the canned queries below.
+license: Mixed, see DATA_SOURCES.md
+license_url: https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md
+source: ragite-demo
+source_url: https://github.com/pihme/ragite-demo
+databases:
+  demo:
+    tables:
+      docs:
+        description: ragite Document table. Write here; search with WHERE docs MATCH 'question'.
+      docs_chunks:
+        description: Read-only companion with one row per chunk. Search with WHERE docs_chunks MATCH 'question'.
+      doc_info:
+        description: Title, URL, collection, language, license and revision of every document (doc_id matches docs).
+        sort: doc_id
+      build_info:
+        description: Versions and checksums of the build that produced this file.
+      docs_documents: {hidden: true}
+      docs_chunk_rows: {hidden: true}
+      docs_model: {hidden: true}
+      # Storage tables ragite creates; hidden from the table list only, never queried.
+      docs_vec: {hidden: true}
+      docs_vec_chunks: {hidden: true}
+      docs_vec_info: {hidden: true}
+      docs_vec_rowids: {hidden: true}
+      docs_vec_vector_chunks00: {hidden: true}
+      docs_fts: {hidden: true}
+    queries:
+      search:
+        title: Search passages (hybrid)
+        description: >-
+          Hybrid search: vector similarity and BM25 full-text ranking fused with Reciprocal Rank Fusion,
+          on docs_chunks. A short hit (under 80 characters, often a bare heading) gets the next chunks
+          of the same section as context (chunks of at least 40 characters, at most 2, until the card
+          has 200 characters). Each passage is shown once (SPEC D9): in score order, a span counts as
+          shown when at least half of it is already displayed by better cards of the same document; a
+          hit that is shown already, a short hit whose context is all shown, or a card with the same
+          text as a better card is dropped, and shown context is left out. spans lists the displayed
+          [start, end) spans. collection is optional (sqlite-docs, wikipedia or ragite-docs).
+        sql: |-
+          with recursive
+          hits as materialized (
+            select rowid as chunk_id, doc_id, start, "end", chunk, heading_path, score
+            from docs_chunks
+            where docs_chunks match :q
+          ),
+          ranked as materialized (
+            select hits.*, i.title, i.url, i.collection,
+                   row_number() over (order by hits.score desc, hits.chunk_id) as r
+            from hits join doc_info i on i.doc_id = hits.doc_id
+            where :collection = '' or i.collection = :collection
+          ),
+          top as materialized (
+            select * from ranked where r <= 60
+          ),
+          following as (
+            select t.chunk_id as hit, c.chunk, c.start, c."end",
+                   row_number() over w as n,
+                   length(t.chunk) + coalesce(sum(length(c.chunk)) over (w rows between unbounded preceding and 1 preceding), 0) as shown_before
+            from top t
+            join docs_chunks c on c.doc_id = t.doc_id
+            where length(t.chunk) < 80
+              and c.start >= t."end"
+              and length(c.chunk) >= 40
+              and substr(c.heading_path, 1, length(t.heading_path) - 1) = substr(t.heading_path, 1, length(t.heading_path) - 1)
+            window w as (partition by t.chunk_id order by c.start, c.rowid)
+          ),
+          context as (
+            select hit, json_group_array(json_array(start, "end", chunk)) as ctx_items,
+                   max("end") as ctx_end, group_concat(chunk, ' ') as ctx_text
+            from (select * from following where n <= 2 and shown_before < 200 order by hit, n)
+            group by hit
+          ),
+          -- A card is a hit plus its context. Spans are [doc_id, start, end] in the stored document.
+          cards as materialized (
+            select t.*, json_array(t.doc_id, t.start, t."end") as hit_span,
+                   (select coalesce(json_group_array(json_array(t.doc_id, json_extract(v.value, '$[0]'), json_extract(v.value, '$[1]'),
+                                                                json_extract(v.value, '$[2]'))), '[]')
+                    from json_each(coalesce(x.ctx_items, '[]')) v) as ctx_items,
+                   max(t."end", coalesce(x.ctx_end, 0)) as card_end,
+                   lower(trim(t.chunk || ' ' || coalesce(x.ctx_text, ''))) as card_key
+            from top t left join context x on x.hit = t.chunk_id
+          ),
+          -- Greedy, in score order (SPEC D9). `shown` holds the spans displayed by the cards kept so far, `keys`
+          -- their texts. A span counts as shown when at least half of it lies in spans already displayed.
+          -- A card is kept unless its text equals a kept card's text, its hit is already shown, or it is a short
+          -- hit whose context is all shown already. A kept card displays only the context that is not shown yet.
+          -- It adds its displayed spans, so a card is kept exactly when `shown` grows at its step.
+          walk(r, shown, keys) as (
+            select 0, json('[]'), json('[]')
+            union all
+            select c.r,
+                   case when not exists (select 1 from json_each(w.keys) k where k.value = c.card_key)
+                             and 2 * (select coalesce(sum(max(0, min(json_extract(c.hit_span, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(c.hit_span, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(w.shown) b where json_extract(b.value, '$[0]') = json_extract(c.hit_span, '$[0]')) < json_extract(c.hit_span, '$[2]') - json_extract(c.hit_span, '$[1]')
+                             and (json_array_length(c.ctx_items) = 0
+                                  or exists (select 1 from json_each(c.ctx_items) v where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(w.shown) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')))
+                        then (select json_group_array(json(value)) from (
+                                select value from json_each(w.shown)
+                                union all
+                                select c.hit_span
+                                union all
+                                select json_array(json_extract(v.value, '$[0]'), json_extract(v.value, '$[1]'), json_extract(v.value, '$[2]'))
+                                from json_each(c.ctx_items) v where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(w.shown) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')))
+                        else w.shown end,
+                   case when not exists (select 1 from json_each(w.keys) k where k.value = c.card_key)
+                        then json_insert(w.keys, '$[#]', c.card_key) else w.keys end
+            from walk w join cards c on c.r = w.r + 1
+          ),
+          kept as (
+            select c.*, p.shown as before
+            from walk w join walk p on p.r = w.r - 1 join cards c on c.r = w.r
+            where json_array_length(w.shown) > json_array_length(p.shown)
+          )
+          select k.title, k.url, k.collection, k.heading_path, k.chunk,
+                 (select json_group_array(json_extract(v.value, '$[3]')) from json_each(k.ctx_items) v
+                  where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(k.before) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')) as context,
+                 round(k.score, 5) as score, k.doc_id, k.start, k.card_end as "end",
+                 (select json_group_array(json_array(json_extract(v.value, '$[1]'), json_extract(v.value, '$[2]')))
+                  from (select k.hit_span as value
+                        union all
+                        select v.value from json_each(k.ctx_items) v where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(k.before) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')) v) as spans
+          from kept k
+          order by k.r
+          limit 20
+      search_documents:
+        title: Search documents (hybrid)
+        description: One row per document, ranked by its best chunk. collection is optional.
+        sql: |-
+          with hits as materialized (
+            select doc_id, score from docs where docs match :q
+          )
+          select i.title, i.url, i.collection, i.lang, round(hits.score, 5) as score
+          from hits join doc_info i on i.doc_id = hits.doc_id
+          where :collection = '' or i.collection = :collection
+          order by hits.score desc, hits.doc_id
+          limit 10
+      chunks_with_document:
+        title: Search chunks, joined to their document
+        description: >-
+          Hybrid search on docs_chunks, joined to the docs table (format, full text length) and to
+          doc_info (title, license, revision). start and end are the chunk's position in the document.
+        sql: |-
+          with hits as materialized (
+            select rowid as chunk_id, doc_id, start, "end", chunk, score
+            from docs_chunks
+            where docs_chunks match :q
+            limit 10
+          )
+          select i.title, i.license, i.revision, d.format, length(d.text) as document_length,
+                 hits.start, hits."end", hits.chunk, round(hits.score, 5) as score
+          from hits
+          join docs d on d.doc_id = hits.doc_id
+          join doc_info i on i.doc_id = hits.doc_id
+          order by hits.score desc, hits.chunk_id
+      document_chunks:
+        title: All chunks of one document
+        description: Chunks of a document in order, without search (score is null). doc_id comes from doc_info.
+        sql: |-
+          select rowid as chunk_id, doc_id, source, start, "end", heading_path, chunk
+          from docs_chunks
+          where doc_id = :doc_id
+      model:
+        title: Model
+        description: The model built into libragite.so, the model the docs table uses, and the build of this file.
+        sql: |-
+          select m.name, m.technical_id, ragite_table_model('docs') as table_model,
+                 (select value from build_info where key = 'ragite_version') as ragite_version
+          from ragite_default_model() m
+      embed:
+        title: Embed text
+        description: >-
+          ragite_embed with the docs table's model. role is query or passage. Returns a float32 BLOB
+          (4 bytes per dimension); shown here as its size and first bytes.
+        sql: |-
+          select :text as text, :role as role,
+                 length(ragite_embed('docs', :text, :role)) / 4 as dimensions,
+                 hex(substr(ragite_embed('docs', :text, :role), 1, 16)) as first_16_bytes
+          where :text <> ''

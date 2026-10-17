@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Query a running Datasette over HTTP: the search page and the hybrid canned queries must answer.
+# Usage: scripts/smoke http://127.0.0.1:8001
+set -euo pipefail
+base="${1:-http://127.0.0.1:8001}"
+
+for _ in $(seq 1 60); do
+  curl -fsS "$base/-/versions.json" >/dev/null 2>&1 && break
+  sleep 1
+done
+
+curl -fsS "$base/search" | grep -q 'id="rs-q"'
+echo "ok   /search"
+
+check() {
+  local query="$1" q="$2" want="$3" collection="${4:-}"
+  local body
+  body=$(curl -fsS -G "$base/demo/$query.json" --data-urlencode "q=$q" --data-urlencode "collection=$collection" --data-urlencode "_shape=array")
+  python3 - "$query" "$q" "$want" "$body" <<'PY'
+import json, sys
+query, q, want, body = sys.argv[1:]
+rows = json.loads(body)
+assert rows, f"{query}: no rows for {q!r}"
+top = rows[0]
+assert want in top["url"], f"{query}: top hit {top['url']} does not contain {want}"
+print(f"ok   {query:16} {q!r}: {len(rows)} rows, top {top['title']!r} score {top['score']}")
+PY
+}
+
+check search "How do I copy a database while it is in use?" backup.html
+check search "What is write-ahead logging?" wal.html
+check search "What is a B-tree?" wikipedia.org wikipedia
+check search_documents "What is a B-tree?" B-tree

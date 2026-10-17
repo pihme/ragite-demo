@@ -1,0 +1,5 @@
+{
+  "sql_time_limit_ms": 10000,
+  "default_page_size": 20,
+  "max_returned_rows": 200
+}
