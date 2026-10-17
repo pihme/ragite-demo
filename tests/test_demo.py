@@ -87,9 +87,10 @@ async def test_empty_query_returns_nothing(ds):
 
 @pytest.mark.asyncio
 async def test_only_hybrid_queries_are_offered(ds):
-    # The demo uses ragite's public interface only: MATCH on docs and docs_chunks.
+    # The demo uses ragite's public interface only: docs, docs_chunks and the ragite_* functions.
     queries = (await ds.client.get("/demo.json")).json()["queries"]
-    assert sorted(q["name"] for q in queries) == ["search", "search_documents"]
+    assert sorted(q["name"] for q in queries) == [
+        "chunks_with_document", "document_chunks", "embed", "model", "search", "search_documents"]
     for q in queries:
         assert "docs_vec" not in q["sql"] and "docs_fts" not in q["sql"]
 
@@ -102,3 +103,27 @@ async def test_search_page_and_assets(ds):
     assert 'name="mode"' not in page.text
     for asset in ("search.js", "search.css"):
         assert (await ds.client.get(f"/static/{asset}")).status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_chunks_with_document(ds):
+    found = await rows(ds, "chunks_with_document", q="What is a B-tree?")
+    assert found and len(found) <= 10
+    assert {"title", "license", "revision", "format", "start", "end", "chunk"} <= set(found[0])
+    assert all(0 <= r["start"] <= r["end"] <= r["document_length"] for r in found)
+
+
+@pytest.mark.asyncio
+async def test_document_chunks(ds):
+    found = await rows(ds, "document_chunks", doc_id="1")
+    assert found and all(r["doc_id"] == 1 for r in found)
+    assert [r["chunk_id"] for r in found] == sorted(r["chunk_id"] for r in found)
+
+
+@pytest.mark.asyncio
+async def test_model_and_embed(ds):
+    (model,) = await rows(ds, "model")
+    assert model["technical_id"] == model["table_model"] == SOURCES["ragite"]["model"]
+    (emb,) = await rows(ds, "embed", text="write-ahead logging", role="query")
+    assert emb["dimensions"] == 512 and len(emb["first_16_bytes"]) == 32
+    assert await rows(ds, "embed", text="", role="query") == []

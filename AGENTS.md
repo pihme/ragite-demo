@@ -16,7 +16,8 @@ Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.6
 - `data/sources.json`: every input, pinned (ragite release and model by SHA-256 and id, SQLite doc archive by SHA-256, Wikipedia by revision id, ragite docs by commit).
 - `scripts/build-demo-db`: downloads, cleans HTML, builds `app/demo.db` (tables `docs` via ragite, `doc_info`, `build_info`). `scripts/smoke`: HTTP checks against a running server.
 - `app/`: Datasette configuration directory (`metadata.yml` canned queries, `settings.json`, `templates/pages/search.html`, `static/`).
-- `tests/`: Datasette test-client checks (`test_demo.py`) and the Playwright screenshot script used in CI.
+- `examples/`: runnable SQL for ragite's public interface (scratch database and read-only on `demo.db`); `scripts/run-examples` runs them in the sqlite3 shell.
+- `tests/`: Datasette test-client checks, `test_examples.py` (`test_demo.py`) and the Playwright screenshot script used in CI.
 
 Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed data, with attribution in `DATA_SOURCES.md` and `doc_info`; no CDN or external service at run time; use only ragite's public SQL interface (hybrid `MATCH` on `docs` and `docs_chunks`, never its storage tables, SPEC D2); heavy work runs in CI.
 

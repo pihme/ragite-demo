@@ -3,13 +3,16 @@ PYTHON ?= python3
 RAGITE_LIB ?= ./libragite.so
 PORT ?= 8001
 
-.PHONY: demo-db test serve smoke screenshots clean
+.PHONY: demo-db test examples serve smoke clean
 
 demo-db: ## Download the pinned sources and build app/demo.db
 	$(PYTHON) scripts/build-demo-db $(if $(LIB),--lib $(LIB))
 
 test: ## Datasette test-client checks against app/demo.db
 	RAGITE_LIB=$(if $(LIB),$(LIB),$(RAGITE_LIB)) $(PYTHON) -m pytest -q
+
+examples: ## Run examples/*.sql in the sqlite3 shell
+	scripts/run-examples
 
 serve: ## Serve the demo with the search page on http://127.0.0.1:$(PORT)/search
 	datasette serve app --load-extension $(basename $(if $(LIB),$(LIB),$(RAGITE_LIB))) --port $(PORT)

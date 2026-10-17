@@ -27,4 +27,5 @@ See [DATA_SOURCES.md](DATA_SOURCES.md) for the exact sources, revisions, changes
 | pytest | 8.4.2 | MIT |
 | pytest-asyncio | 1.2.0 | Apache-2.0 |
 | PyYAML | 6.0.3 | MIT |
+| sqlite3 shell (Ubuntu package, runs the examples) | distribution version | Public domain |
 | Playwright for Python (and the Chromium it installs) | 1.55.0 | Apache-2.0 (Chromium: BSD-3-Clause and others) |

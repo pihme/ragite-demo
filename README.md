@@ -47,8 +47,14 @@ Pass the library path **without** `.so`: SQLite adds the suffix itself (see the 
 | --- | --- | --- |
 | `search` | Hybrid: `docs_chunks MATCH :q`, vector and BM25 fused by Reciprocal Rank Fusion | RRF score, higher is better (at most 2/61) |
 | `search_documents` | Hybrid, one row per document (`docs MATCH :q`) | RRF score of the best chunk |
+| `chunks_with_document` | Hybrid chunks joined to `docs` and `doc_info`, with positions | RRF score |
+| `document_chunks` | All chunks of one `doc_id`, in order (no search) | none |
+| `model` | `ragite_default_model()` and `ragite_table_model('docs')` | none |
+| `embed` | `ragite_embed('docs', :text, :role)`: dimensions and first bytes | none |
 
-Both use only ragite's public interface, `MATCH` on the Document table and its `_chunks` companion. `collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
+All of them use only ragite's public interface: the Document table, its `_chunks` companion and the `ragite_*` functions. `collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
+
+**More SQL**: [examples/](examples/) has runnable `.sql` files for every part of ragite's public interface: create a table, insert each format, update and delete, search documents and chunks, join a chunk to its document, show the model, embed text.
 
 **Raw SQL** (`/demo?sql=...`), for example:
 
@@ -83,11 +89,12 @@ That is 8,778 chunks and a 24 MB `demo.db` (2 KB of vector per chunk). Exact sou
 
 ```bash
 pip install -r requirements-dev.txt
-make demo-db test            # build, then Datasette test-client checks
+make demo-db test            # build, then Datasette test-client checks and the SQL examples
+scripts/run-examples         # the SQL examples through the sqlite3 shell
 make serve & make smoke      # the same searches over HTTP
 ```
 
-CI builds `demo.db`, runs the tests, queries a running `datasette serve` with `curl`, and uploads screenshots of the search page (artifact `screenshots`).
+CI builds `demo.db`, runs the tests and every SQL example, queries a running `datasette serve` with `curl`, and uploads screenshots of the search page (artifact `screenshots`).
 
 ## Contributing
 

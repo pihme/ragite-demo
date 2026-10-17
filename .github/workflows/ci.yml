@@ -36,6 +36,10 @@ jobs:
         run: make demo-db
       - name: Datasette test client
         run: make test
+      - name: SQL examples in the sqlite3 shell
+        run: |
+          sudo apt-get install -y --no-install-recommends sqlite3 > /dev/null
+          scripts/run-examples
       - name: Serve and query over HTTP
         run: |
           make serve PORT=8001 > datasette.log 2>&1 &
