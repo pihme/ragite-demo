@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""Build demo.db: download pinned sources, clean them, and index them with ragite.
+
+Only the Python standard library is used. Every input is pinned in data/sources.json:
+the ragite release binary and the SQLite documentation archive by SHA-256, the Wikipedia
+articles by revision id, and the ragite docs by commit.
+
+    scripts/build-demo-db                     # downloads the release libragite.so to ./libragite.so
+    scripts/build-demo-db --lib ./libragite.so --out app/demo.db
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import html
+import json
+import os
+import re
+import sqlite3
+import sys
+import time
+import urllib.parse
+import urllib.request
+import zipfile
+from html.parser import HTMLParser
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+USER_AGENT = "ragite-demo-build/0.1 (+https://github.com/pihme/ragite-demo)"
+
+# Elements dropped with everything inside them.
+DROP_TAGS = {"script", "style", "svg", "noscript", "nav", "button", "form", "math", "sup", "link", "meta", "img", "figure"}
+# Elements dropped when they carry one of these classes (page chrome, navigation, references, diagrams).
+DROP_CLASSES = {
+    # sqlite.org
+    "nosearch", "fancy_toc", "pikchr", "imgcontainer", "menu", "tagline", "searchmenu",
+    # Wikipedia
+    "mw-editsection", "navbox", "navbox-styles", "reflist", "references", "mw-references-wrap",
+    "reference", "hatnote", "metadata", "noprint", "sistersitebox", "side-box", "ambox",
+    "shortdescription", "mw-empty-elt", "toc", "printfooter", "catlinks", "infobox", "thumb",
+    "navigation-not-searchable", "mw-cite-backlink", "portalbox", "authority-control",
+}
+VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+KEEP_TAGS = {
+    "h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "ul", "ol", "dl", "dt", "dd", "pre", "code",
+    "blockquote", "table", "tr", "td", "th", "tbody", "thead", "b", "i", "em", "strong", "a",
+    "div", "section", "span", "br", "tt", "var", "kbd",
+}
+# Wikipedia sections that are only lists of links or citations.
+WIKI_STOP_HEADINGS = {
+    "en": {"See also", "References", "Notes", "Sources", "Citations", "Further reading", "External links", "Bibliography"},
+    "de": {"Siehe auch", "Literatur", "Weblinks", "Einzelnachweise", "Anmerkungen", "Quellen"},
+}
+
+
+class Cleaner(HTMLParser):
+    """Re-serialise HTML with only the text-bearing structure ragite chunks well."""
+
+    def __init__(self, stop_headings: set[str] | None = None) -> None:
+        super().__init__(convert_charrefs=True)
+        self.out: list[str] = []
+        self.skip_tag: str | None = None
+        self.skip_depth = 0
+        self.stop_headings = stop_headings or set()
+        self.stopped = False
+        self.heading: list[str] | None = None
+        self.title = ""
+        self.in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "title":
+            self.in_title = True
+        if self.stopped:
+            return
+        if self.skip_tag:
+            if tag == self.skip_tag and tag not in VOID:
+                self.skip_depth += 1
+            return
+        classes = set((dict(attrs).get("class") or "").split())
+        if tag in DROP_TAGS or classes & DROP_CLASSES or dict(attrs).get("role") == "navigation":
+            if tag not in VOID:
+                self.skip_tag, self.skip_depth = tag, 1
+            return
+        if tag in {"h2", "h3"} and self.stop_headings:
+            self.heading = []
+        if tag in KEEP_TAGS:
+            self.out.append("<br>" if tag == "br" else f"<{tag}>")
+
+    def handle_startendtag(self, tag, attrs):
+        if not self.skip_tag and not self.stopped and tag == "br":
+            self.out.append("<br>")
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self.in_title = False
+        if self.stopped:
+            return
+        if self.skip_tag:
+            if tag == self.skip_tag:
+                self.skip_depth -= 1
+                if self.skip_depth == 0:
+                    self.skip_tag = None
+            return
+        if self.heading is not None and tag in {"h2", "h3"}:
+            text = " ".join("".join(self.heading).split())
+            self.heading = None
+            if text in self.stop_headings:
+                # Drop the heading we already emitted and everything after it.
+                while self.out and self.out[-1] != f"<{tag}>":
+                    self.out.pop()
+                if self.out:
+                    self.out.pop()
+                self.stopped = True
+                return
+        if tag in KEEP_TAGS and tag not in VOID:
+            self.out.append(f"</{tag}>")
+
+    def handle_data(self, data):
+        if self.in_title:
+            self.title += data
+        if self.skip_tag or self.stopped:
+            return
+        if self.heading is not None:
+            self.heading.append(data)
+        self.out.append(html.escape(data, quote=False))
+
+    def result(self) -> str:
+        text = "".join(self.out)
+        text = re.sub(r"<(span|div|section|a|b|i|em|strong|code)>\s*</\1>", "", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        return text.strip()
+
+
+def clean_html(raw: str, stop_headings: set[str] | None = None) -> tuple[str, str]:
+    parser = Cleaner(stop_headings)
+    parser.feed(raw)
+    parser.close()
+    return parser.result(), " ".join(parser.title.split())
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def fetch(url: str, retries: int = 4) -> bytes:
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return resp.read()
+        except Exception as exc:  # network hiccups: retry with backoff
+            if attempt == retries - 1:
+                raise
+            print(f"  retry {url}: {exc}", file=sys.stderr)
+            time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
+
+
+def cached_download(url: str, dest: Path, sha256: str | None = None) -> Path:
+    if dest.exists() and (sha256 is None or sha256_file(dest) == sha256):
+        return dest
+    print(f"download {url}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    tmp.write_bytes(fetch(url))
+    if sha256 is not None:
+        got = sha256_file(tmp)
+        if got != sha256:
+            tmp.unlink()
+            sys.exit(f"checksum mismatch for {url}: expected {sha256}, got {got}")
+    tmp.replace(dest)
+    return dest
+
+
+def sqlite_docs(cfg: dict, cache: Path):
+    archive = cached_download(cfg["url"], cache / Path(cfg["url"]).name, cfg["sha256"])
+    with zipfile.ZipFile(archive) as zf:
+        for page in cfg["pages"]:
+            raw = zf.read(cfg["prefix"] + page).decode("utf-8", errors="replace")
+            text, title = clean_html(raw)
+            yield {
+                "collection": "sqlite-docs",
+                "title": title or page,
+                "url": cfg["base_url"] + page,
+                "lang": "en",
+                "license": cfg["license"],
+                "revision": f"SQLite {cfg['version']}",
+                "format": "text/html",
+                "text": text,
+            }
+
+
+def wikipedia(cfg: dict, cache: Path):
+    for art in cfg["articles"]:
+        lang, title, revid = art["lang"], art["title"], art["revid"]
+        dest = cache / "wikipedia" / f"{lang}-{revid}.json"
+        if not dest.exists():
+            q = urllib.parse.urlencode({
+                "action": "parse", "oldid": revid, "prop": "text|displaytitle|revid",
+                "format": "json", "formatversion": "2", "disableeditsection": "1", "disabletoc": "1",
+            })
+            print(f"fetch {lang}:{title} rev {revid}")
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(fetch(f"https://{lang}.wikipedia.org/w/api.php?{q}"))
+        data = json.loads(dest.read_text("utf-8"))["parse"]
+        if data["revid"] != revid:
+            sys.exit(f"{lang}:{title}: asked for revision {revid}, got {data['revid']}")
+        body, _ = clean_html(data["text"], WIKI_STOP_HEADINGS.get(lang, set()))
+        page = urllib.parse.quote(title.replace(" ", "_"))
+        yield {
+            "collection": "wikipedia",
+            "title": f"{title} ({lang}.wikipedia.org)",
+            "url": f"https://{lang}.wikipedia.org/w/index.php?title={page}&oldid={revid}",
+            "lang": lang,
+            "license": cfg["license"],
+            "revision": str(revid),
+            "format": "text/html",
+            "text": f"<h1>{html.escape(title)}</h1>\n{body}",
+        }
+
+
+def ragite_docs(cfg: dict, cache: Path):
+    for name in cfg["files"]:
+        url = f"https://raw.githubusercontent.com/{cfg['repo']}/{cfg['commit']}/{name}"
+        dest = cache / "ragite" / cfg["commit"][:12] / name
+        if not dest.exists():
+            print(f"fetch {url}")
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(fetch(url))
+        yield {
+            "collection": "ragite-docs",
+            "title": f"ragite {name}",
+            "url": f"https://github.com/{cfg['repo']}/blob/{cfg['commit']}/{name}",
+            "lang": "en",
+            "license": cfg["license"],
+            "revision": cfg["commit"],
+            "format": "text/markdown",
+            "text": dest.read_text("utf-8"),
+        }
+
+
+SCHEMA = """
+CREATE TABLE doc_info (
+    doc_id INTEGER PRIMARY KEY,
+    collection TEXT NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    lang TEXT NOT NULL,
+    license TEXT NOT NULL,
+    revision TEXT NOT NULL,
+    bytes INTEGER NOT NULL
+);
+CREATE TABLE build_info (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+"""
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--lib", help="path to libragite.so (default: download the pinned release to ./libragite.so)")
+    ap.add_argument("--out", default=str(ROOT / "app" / "demo.db"), help="output database (default: app/demo.db)")
+    ap.add_argument("--cache", default=str(ROOT / ".cache"), help="download cache (default: .cache/)")
+    ap.add_argument("--sources", default=str(ROOT / "data" / "sources.json"))
+    args = ap.parse_args()
+
+    sources = json.loads(Path(args.sources).read_text("utf-8"))
+    cache = Path(args.cache)
+    rg = sources["ragite"]
+    if args.lib:
+        lib = Path(args.lib).resolve()
+    else:
+        lib = cached_download(rg["url"], ROOT / "libragite.so", rg["sha256"]).resolve()
+    # sqlite3_load_extension appends the platform suffix itself; pass the path without it.
+    lib_arg = str(lib)[: -len(".so")] if str(lib).endswith(".so") else str(lib)
+
+    docs = [*sqlite_docs(sources["sqlite_docs"], cache), *wikipedia(sources["wikipedia"], cache),
+            *ragite_docs(sources["ragite_docs"], cache)]
+
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_suffix(".db.part")
+    tmp.unlink(missing_ok=True)
+    con = sqlite3.connect(tmp)
+    con.enable_load_extension(True)
+    con.load_extension(lib_arg)
+    con.enable_load_extension(False)
+    model = rg["model"]
+    (default_model,) = con.execute("SELECT technical_id FROM ragite_default_model()").fetchone()
+    if default_model != model:
+        sys.exit(f"libragite.so has model {default_model}, data/sources.json pins {model}")
+
+    started = time.monotonic()
+    with con:
+        con.executescript(SCHEMA)
+        con.execute(f"CREATE VIRTUAL TABLE docs USING ragite(model='{model}')")
+        for d in docs:
+            cur = con.execute("INSERT INTO docs(text, source, format) VALUES (?, ?, ?)", (d["text"], d["url"], d["format"]))
+            doc_id = con.execute("SELECT doc_id FROM docs WHERE source = ?", (d["url"],)).fetchone()[0]
+            con.execute(
+                "INSERT INTO doc_info VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (doc_id, d["collection"], d["title"], d["url"], d["lang"], d["license"], d["revision"], len(d["text"].encode())),
+            )
+        manifest = hashlib.sha256(Path(args.sources).read_bytes()).hexdigest()
+        con.executemany("INSERT INTO build_info VALUES (?, ?)", [
+            ("ragite_version", rg["version"]),
+            ("ragite_sha256", sha256_file(lib)),
+            ("model", model),
+            ("sources_sha256", manifest),
+        ])
+    con.execute("VACUUM")
+    (docs_n,) = con.execute("SELECT count(*) FROM doc_info").fetchone()
+    (chunks_n,) = con.execute("SELECT count(*) FROM docs_chunks").fetchone()
+    by_coll = con.execute("SELECT collection, count(*), sum(bytes) FROM doc_info GROUP BY collection ORDER BY collection").fetchall()
+    con.close()
+    tmp.replace(out)
+    print(f"built {out}: {docs_n} documents, {chunks_n} chunks, {out.stat().st_size / 1e6:.1f} MB in {time.monotonic() - started:.1f} s")
+    for coll, n, size in by_coll:
+        print(f"  {coll}: {n} documents, {size / 1e6:.2f} MB of cleaned text")
+
+
+if __name__ == "__main__":
+    main()

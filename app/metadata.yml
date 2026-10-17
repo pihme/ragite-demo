@@ -1,0 +1,97 @@
+title: ragite demo
+description_html: |-
+  Hybrid search over the SQLite documentation, a few Wikipedia articles and the ragite docs,
+  run by the <a href="https://github.com/pihme/ragite">ragite</a> SQLite extension.
+  <strong><a href="/search">Open the search page</a></strong> or use the canned queries below.
+license: Mixed, see DATA_SOURCES.md
+license_url: https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md
+source: ragite-demo
+source_url: https://github.com/pihme/ragite-demo
+databases:
+  demo:
+    tables:
+      docs:
+        description: ragite Document table. Write here; search with WHERE docs MATCH 'question'.
+      docs_chunks:
+        description: Read-only companion with one row per chunk. Search with WHERE docs_chunks MATCH 'question'.
+      doc_info:
+        description: Title, URL, collection, language, license and revision of every document (doc_id matches docs).
+        sort: doc_id
+      build_info:
+        description: Versions and checksums of the build that produced this file.
+      docs_documents: {hidden: true}
+      docs_chunk_rows: {hidden: true}
+      docs_model: {hidden: true}
+      docs_vec: {hidden: true}
+      docs_vec_chunks: {hidden: true}
+      docs_vec_info: {hidden: true}
+      docs_vec_rowids: {hidden: true}
+      docs_vec_vector_chunks00: {hidden: true}
+      docs_fts: {hidden: true}
+    queries:
+      search:
+        title: Search chunks (hybrid)
+        description: >-
+          Hybrid search: vector similarity and BM25 full-text ranking fused with Reciprocal Rank Fusion.
+          collection is optional (sqlite-docs, wikipedia or ragite-docs).
+        sql: |-
+          with hits as materialized (
+            select rowid as chunk_id, doc_id, chunk, heading_path, score
+            from docs_chunks
+            where docs_chunks match :q
+          )
+          select i.title, i.url, i.collection, hits.heading_path, hits.chunk, round(hits.score, 5) as score
+          from hits join doc_info i on i.doc_id = hits.doc_id
+          where :collection = '' or i.collection = :collection
+          order by hits.score desc, hits.chunk_id
+          limit 20
+      search_documents:
+        title: Search documents (hybrid)
+        description: One row per document, ranked by its best chunk.
+        sql: |-
+          with hits as materialized (
+            select doc_id, score from docs where docs match :q
+          )
+          select i.title, i.url, i.collection, i.lang, round(hits.score, 5) as score
+          from hits join doc_info i on i.doc_id = hits.doc_id
+          order by hits.score desc, hits.doc_id
+          limit 10
+      vector_search:
+        title: Search chunks (vector only)
+        description: >-
+          Nearest chunks by cosine distance, using ragite_embed() and the sqlite-vec table ragite maintains.
+          similarity = 1 - cosine distance.
+        sql: |-
+          with hits as materialized (
+            select rowid as chunk_id, distance
+            from docs_vec
+            where embedding match ragite_embed('docs', coalesce(nullif(:q, ''), ' '), 'query') and k = 50
+          )
+          select i.title, i.url, i.collection, c.heading_path, c.chunk, round(1 - hits.distance, 5) as score
+          from hits
+          join docs_chunks c on c.rowid = hits.chunk_id
+          join doc_info i on i.doc_id = c.doc_id
+          where :q <> '' and (:collection = '' or i.collection = :collection)
+          order by hits.distance, hits.chunk_id
+          limit 20
+      fulltext_search:
+        title: Search chunks (full text only)
+        description: >-
+          BM25 over the FTS5 table ragite maintains (unicode61 tokenizer, no stemming).
+          q is FTS5 query syntax, for example: vacuum into, "write-ahead log", journal NOT wal.
+          score = -bm25, higher is better.
+        sql: |-
+          with hits as materialized (
+            select rowid as chunk_id, bm25(docs_fts) as bm25
+            from docs_fts
+            where docs_fts match :q
+            order by rank
+            limit 200
+          )
+          select i.title, i.url, i.collection, c.heading_path, c.chunk, round(-hits.bm25, 5) as score
+          from hits
+          join docs_chunks c on c.rowid = hits.chunk_id
+          join doc_info i on i.doc_id = c.doc_id
+          where :collection = '' or i.collection = :collection
+          order by hits.bm25, hits.chunk_id
+          limit 20

@@ -1,0 +1,36 @@
+/* Search page for the ragite demo. Local styles only; Datasette's app.css stays underneath. */
+.rs { max-width: 52rem; margin: 0 auto; }
+.rs-title { font-size: 2rem; margin: 0.5rem 0 0.25rem; }
+.rs-lede { color: #555; margin-top: 0; }
+.rs-form { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 0.5rem; }
+.rs input.rs-q { flex: 1 1 24rem; font-size: 1.25rem; padding: 0.7rem 0.9rem; border: 2px solid #9aa4b2; border-radius: 0.6rem; }
+.rs input.rs-q:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
+.rs button.rs-go { font-size: 1.1rem; padding: 0.7rem 1.4rem; border: 0; border-radius: 0.6rem; background: #2563eb; color: #fff; cursor: pointer; }
+.rs button.rs-go:hover { background: #1d4ed8; }
+.rs-options { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.rs-modes { border: 0; padding: 0; margin: 0; display: inline-flex; border: 1px solid #cbd2dc; border-radius: 999px; overflow: hidden; }
+.rs-modes label { padding: 0.35rem 0.9rem; cursor: pointer; white-space: nowrap; }
+.rs-modes input { position: absolute; opacity: 0; }
+.rs-modes label:has(input:checked) { background: #1f2937; color: #fff; }
+.rs-modes label:has(input:focus-visible) { outline: 2px solid #2563eb; }
+.rs-coll select { font-size: 1rem; padding: 0.25rem; }
+.rs-examples { color: #555; font-size: 0.95rem; }
+.rs-status { color: #555; min-height: 1.4em; }
+.rs-results { list-style: none; padding: 0; margin: 0; }
+.rs-card { border: 1px solid #e2e6eb; border-radius: 0.75rem; padding: 0.9rem 1.1rem; margin: 0 0 0.8rem; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+.rs-card-head { display: flex; gap: 0.6rem; align-items: baseline; justify-content: space-between; }
+.rs-card-title { font-size: 1.15rem; font-weight: 600; text-decoration: none; }
+.rs-card-title:hover { text-decoration: underline; }
+.rs-card-path { color: #6b7280; font-size: 0.9rem; margin-top: 0.15rem; }
+.rs-card-text { margin: 0.5rem 0; line-height: 1.5; white-space: pre-line; }
+.rs-card-text mark { background: #fef08a; padding: 0 0.1em; border-radius: 0.15em; }
+.rs-card-meta { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; color: #6b7280; }
+.rs-card-source { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-score { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rs-badge { font-size: 0.75rem; padding: 0.1rem 0.55rem; border-radius: 999px; white-space: nowrap; background: #e5e7eb; }
+.rs-badge-sqlite-docs { background: #dbeafe; color: #1e3a8a; }
+.rs-badge-wikipedia { background: #ede9fe; color: #4c1d95; }
+.rs-badge-ragite-docs { background: #dcfce7; color: #14532d; }
+.rs-foot { margin-top: 2rem; font-size: 0.9rem; color: #555; }
+.rs-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.rs-coll { display: inline-flex; gap: 0.4rem; align-items: center; }
