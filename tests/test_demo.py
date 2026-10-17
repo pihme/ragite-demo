@@ -165,17 +165,47 @@ async def test_short_hits_come_with_context(ds):
 async def test_each_passage_is_shown_once(ds, q):
     found = await rows(ds, "search", q=q)
     assert len(found) == 20
-    # No two cards of one document overlap (a card is its chunk plus its context).
-    spans = sorted((r["doc_id"], r["start"], r["end"]) for r in found)
-    for (d1, s1, e1), (d2, s2, e2) in zip(spans, spans[1:]):
-        assert d1 != d2 or e1 <= s2, (d1, s1, e1, s2, e2)
+    # SPEC D9: no card displays a span (its hit or a context chunk) that is at least half displayed
+    # by better cards of the same document already.
+    shown = {}
+    for r in found:
+        spans = json.loads(r["spans"])
+        assert len(spans) == len(json.loads(r["context"])) + 1
+        for s, e in spans:
+            seen = sum(max(0, min(e, e2) - max(s, s2)) for s2, e2 in shown.get(r["doc_id"], []))
+            assert 2 * seen < e - s, (r["chunk"][:40], s, e, seen)
+        shown.setdefault(r["doc_id"], []).extend(spans)
     # No card repeats the text of another card, and no hit is also shown as another card's context.
     keys = [" ".join([r["chunk"], *json.loads(r["context"])]).strip().lower() for r in found]
     assert len(set(keys)) == len(keys)
-    shown = [t for r in found for t in json.loads(r["context"])]
-    assert not set(r["chunk"] for r in found) & set(shown)
+    ctx = [t for r in found for t in json.loads(r["context"])]
+    assert not set(r["chunk"] for r in found) & set(ctx)
     assert [r["score"] for r in found] == sorted((r["score"] for r in found), reverse=True)
 
+
+CONTEXT_QUERIES = PASSAGE_QUERIES + ["foreign key", "how does a b-tree work", "pragma journal_mode", "window functions"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("q", CONTEXT_QUERIES)
+async def test_at_most_two_context_chunks(ds, q):
+    for coll in ("", "sqlite-docs", "wikipedia", "ragite-docs"):
+        for r in await rows(ds, "search", q=q, collection=coll):
+            ctx = json.loads(r["context"])
+            assert len(ctx) <= 2, (q, coll, r["chunk"][:40], len(ctx))
+            assert len(json.loads(r["spans"])) == len(ctx) + 1
+
+
+@pytest.mark.asyncio
+async def test_split_paragraph_pieces_both_stay(ds):
+    # A long paragraph is cut into pieces that share a short overlap (ragite REQ-70). The overlap alone
+    # must not drop the neighbouring piece: "Window functions come in two varieties" is the best answer.
+    found = await rows(ds, "search", q="window functions")
+    piece = next((r for r in found if r["chunk"].startswith("Window functions come in two varieties")), None)
+    assert piece is not None, [r["chunk"][:40] for r in found]
+    neighbours = [r for r in found if r is not piece and r["doc_id"] == piece["doc_id"]
+                  and r["start"] < piece["end"] and r["end"] > piece["start"]]
+    assert neighbours, "expected an overlapping piece of the same paragraph in the results too"
 
 @pytest.mark.asyncio
 async def test_source_filter_limit_is_real(ds):

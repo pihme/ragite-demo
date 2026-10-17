@@ -35,10 +35,12 @@ databases:
         description: >-
           Hybrid search: vector similarity and BM25 full-text ranking fused with Reciprocal Rank Fusion,
           on docs_chunks. A short hit (under 80 characters, often a bare heading) gets the next chunks
-          of the same section as context (chunks of at least 40 characters, up to 2, until the card
-          has 200 characters). Each passage is shown once: a hit is dropped when its text range
-          overlaps a better card of the same document (its chunk plus context) or when its text
-          equals a better card's text. collection is optional (sqlite-docs, wikipedia or ragite-docs).
+          of the same section as context (chunks of at least 40 characters, at most 2, until the card
+          has 200 characters). Each passage is shown once (SPEC D9): in score order, a span counts as
+          shown when at least half of it is already displayed by better cards of the same document; a
+          hit that is shown already, a short hit whose context is all shown, or a card with the same
+          text as a better card is dropped, and shown context is left out. spans lists the displayed
+          [start, end) spans. collection is optional (sqlite-docs, wikipedia or ragite-docs).
         sql: |-
           with recursive
           hits as materialized (
@@ -56,7 +58,7 @@ databases:
             select * from ranked where r <= 60
           ),
           following as (
-            select t.chunk_id as hit, c.chunk, c."end",
+            select t.chunk_id as hit, c.chunk, c.start, c."end",
                    row_number() over w as n,
                    length(t.chunk) + coalesce(sum(length(c.chunk)) over (w rows between unbounded preceding and 1 preceding), 0) as shown_before
             from top t
@@ -68,36 +70,61 @@ databases:
             window w as (partition by t.chunk_id order by c.start, c.rowid)
           ),
           context as (
-            select hit, json_group_array(chunk) as context, max("end") as ctx_end, group_concat(chunk, ' ') as ctx_text
-            from (select * from following where n <= 3 and shown_before < 200 order by hit, n)
+            select hit, json_group_array(json_array(start, "end", chunk)) as ctx_items,
+                   max("end") as ctx_end, group_concat(chunk, ' ') as ctx_text
+            from (select * from following where n <= 2 and shown_before < 200 order by hit, n)
             group by hit
           ),
+          -- A card is a hit plus its context. Spans are [doc_id, start, end] in the stored document.
           cards as materialized (
-            select t.*, coalesce(x.context, '[]') as context, max(t."end", coalesce(x.ctx_end, 0)) as card_end,
+            select t.*, json_array(t.doc_id, t.start, t."end") as hit_span,
+                   (select coalesce(json_group_array(json_array(t.doc_id, json_extract(v.value, '$[0]'), json_extract(v.value, '$[1]'),
+                                                                json_extract(v.value, '$[2]'))), '[]')
+                    from json_each(coalesce(x.ctx_items, '[]')) v) as ctx_items,
+                   max(t."end", coalesce(x.ctx_end, 0)) as card_end,
                    lower(trim(t.chunk || ' ' || coalesce(x.ctx_text, ''))) as card_key
             from top t left join context x on x.hit = t.chunk_id
           ),
-          walk(r, kept, keep) as (
-            select 0, json('[]'), 0
+          -- Greedy, in score order (SPEC D9). `shown` holds the spans displayed by the cards kept so far, `keys`
+          -- their texts. A span counts as shown when at least half of it lies in spans already displayed.
+          -- A card is kept unless its text equals a kept card's text, its hit is already shown, or it is a short
+          -- hit whose context is all shown already. A kept card displays only the context that is not shown yet.
+          -- It adds its displayed spans, so a card is kept exactly when `shown` grows at its step.
+          walk(r, shown, keys) as (
+            select 0, json('[]'), json('[]')
             union all
             select c.r,
-                   case when not exists (select 1 from json_each(w.kept) j
-                                         where (json_extract(j.value, '$.d') = c.doc_id and json_extract(j.value, '$.s') < c.card_end
-                                                and json_extract(j.value, '$.e') > c.start)
-                                            or json_extract(j.value, '$.k') = c.card_key)
-                        then json_insert(w.kept, '$[#]', json_object('d', c.doc_id, 's', c.start, 'e', c.card_end, 'k', c.card_key))
-                        else w.kept end,
-                   not exists (select 1 from json_each(w.kept) j
-                               where (json_extract(j.value, '$.d') = c.doc_id and json_extract(j.value, '$.s') < c.card_end
-                                      and json_extract(j.value, '$.e') > c.start)
-                                  or json_extract(j.value, '$.k') = c.card_key)
+                   case when not exists (select 1 from json_each(w.keys) k where k.value = c.card_key)
+                             and 2 * (select coalesce(sum(max(0, min(json_extract(c.hit_span, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(c.hit_span, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(w.shown) b where json_extract(b.value, '$[0]') = json_extract(c.hit_span, '$[0]')) < json_extract(c.hit_span, '$[2]') - json_extract(c.hit_span, '$[1]')
+                             and (json_array_length(c.ctx_items) = 0
+                                  or exists (select 1 from json_each(c.ctx_items) v where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(w.shown) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')))
+                        then (select json_group_array(json(value)) from (
+                                select value from json_each(w.shown)
+                                union all
+                                select c.hit_span
+                                union all
+                                select json_array(json_extract(v.value, '$[0]'), json_extract(v.value, '$[1]'), json_extract(v.value, '$[2]'))
+                                from json_each(c.ctx_items) v where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(w.shown) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')))
+                        else w.shown end,
+                   case when not exists (select 1 from json_each(w.keys) k where k.value = c.card_key)
+                        then json_insert(w.keys, '$[#]', c.card_key) else w.keys end
             from walk w join cards c on c.r = w.r + 1
+          ),
+          kept as (
+            select c.*, p.shown as before
+            from walk w join walk p on p.r = w.r - 1 join cards c on c.r = w.r
+            where json_array_length(w.shown) > json_array_length(p.shown)
           )
-          select c.title, c.url, c.collection, c.heading_path, c.chunk, c.context, round(c.score, 5) as score,
-                 c.doc_id, c.start, c.card_end as "end"
-          from walk w join cards c on c.r = w.r
-          where w.keep
-          order by c.r
+          select k.title, k.url, k.collection, k.heading_path, k.chunk,
+                 (select json_group_array(json_extract(v.value, '$[3]')) from json_each(k.ctx_items) v
+                  where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(k.before) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')) as context,
+                 round(k.score, 5) as score, k.doc_id, k.start, k.card_end as "end",
+                 (select json_group_array(json_array(json_extract(v.value, '$[1]'), json_extract(v.value, '$[2]')))
+                  from (select k.hit_span as value
+                        union all
+                        select v.value from json_each(k.ctx_items) v where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(k.before) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')) v) as spans
+          from kept k
+          order by k.r
           limit 20
       search_documents:
         title: Search documents (hybrid)
