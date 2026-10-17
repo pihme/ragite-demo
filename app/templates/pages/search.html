@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Search · ragite demo{% endblock %}
+{% block title %}Ask the docs · ragite-demo{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ urls.path('/static/search.css') }}">
@@ -11,49 +11,69 @@
 
 {% block content %}
 <div class="rs" id="ragite-search" data-db="{{ urls.database('demo') }}">
-  <h1 class="rs-title">Ask the docs</h1>
-  <p class="rs-lede">Search the SQLite documentation, a few Wikipedia articles and the ragite docs.
-    Everything runs locally in one SQLite file with the
-    <a href="https://github.com/pihme/ragite">ragite</a> extension.</p>
+  <div class="rs-hero">
+    <h1 class="rs-title">Ask the docs</h1>
+    <p class="rs-lede">Hybrid search over the SQLite documentation, five Wikipedia articles and the ragite docs,
+      all in one SQLite file. The embeddings are computed on the CPU; no external AI service is called.</p>
+  </div>
 
   <form class="rs-form" id="rs-form" role="search">
-    <label class="rs-visually-hidden" for="rs-q">Search</label>
-    <input class="rs-q" id="rs-q" name="q" type="search" autocomplete="off" autofocus
-           placeholder="How do I copy a database while it is in use?">
-    <button class="rs-go" type="submit">Search</button>
-
-    <div class="rs-options">
-      <label class="rs-coll">In
-        <select name="collection" id="rs-collection">
-          <option value="">all sources</option>
-          <option value="sqlite-docs">SQLite docs</option>
-          <option value="wikipedia">Wikipedia</option>
-          <option value="ragite-docs">ragite docs</option>
-        </select>
-      </label>
+    <div class="rs-bar">
+      <svg class="rs-bar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <label class="rs-visually-hidden" for="rs-q">Search</label>
+      <input class="rs-q" id="rs-q" name="q" type="search" autocomplete="off" autofocus
+             placeholder="Ask a question, e.g. How do I copy a database while it is in use?">
+      <button class="rs-go" type="submit">Search</button>
     </div>
-  </form>
 
-  <p class="rs-examples">Try:
-    <a href="?q=How+do+I+copy+a+database+while+it+is+in+use%3F">copy a live database</a> ·
-    <a href="?q=What+is+write-ahead+logging%3F">write-ahead logging</a> ·
-    <a href="?q=change+the+output+mode+of+the+command+line+shell">CLI output modes</a> ·
-    <a href="?q=Who+uses+B-trees+and+why%3F">B-trees</a> ·
-    <a href="?q=Wie+gro%C3%9F+ist+die+SQLite-Bibliothek%3F&amp;collection=wikipedia">a German question, Wikipedia only</a>
-  </p>
+    <fieldset class="rs-chips" id="rs-chips">
+      <legend class="rs-visually-hidden">Source</legend>
+      <label class="rs-chip"><input type="radio" name="collection" value="" checked><span>All sources</span></label>
+      <label class="rs-chip"><input type="radio" name="collection" value="sqlite-docs"><span>SQLite docs</span></label>
+      <label class="rs-chip"><input type="radio" name="collection" value="wikipedia"><span>Wikipedia</span></label>
+      <label class="rs-chip"><input type="radio" name="collection" value="ragite-docs"><span>ragite docs</span></label>
+    </fieldset>
+  </form>
 
   <p class="rs-status" id="rs-status" aria-live="polite"></p>
   <p class="rs-hint" id="rs-filter-hint" hidden></p>
   <ol class="rs-results" id="rs-results"></ol>
+  <div class="rs-more-wrap"><button class="rs-more" id="rs-more" type="button" hidden></button></div>
 
-  <p class="rs-foot">
-    <span id="rs-sql"></span>
-    Raw SQL: <a href="{{ urls.database('demo') }}">demo database</a> ·
-    <a href="{{ urls.database('demo') }}#queries">canned queries</a> ·
-    <a href="{{ urls.table('demo', 'doc_info') }}">all documents</a> ·
-    <br>SQLite docs: public domain. Wikipedia text: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>,
-    authors in each article's history. ragite docs: MIT OR Apache-2.0.
-    Details: <a href="https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md">DATA_SOURCES.md</a>
-  </p>
+  <div class="rs-empty" id="rs-empty">
+    <h2 class="rs-h2">Try a question</h2>
+    <ul class="rs-examples">
+      <li><a href="?q=How+do+I+copy+a+database+while+it+is+in+use%3F"><span class="rs-ex-src">SQLite docs</span>How do I copy a database while it is in use?</a></li>
+      <li><a href="?q=What+is+write-ahead+logging%3F"><span class="rs-ex-src">SQLite docs</span>What is write-ahead logging?</a></li>
+      <li><a href="?q=change+the+output+mode+of+the+command+line+shell"><span class="rs-ex-src">SQLite docs</span>Change the output mode of the command-line shell</a></li>
+      <li><a href="?q=Who+uses+B-trees+and+why%3F"><span class="rs-ex-src">Wikipedia</span>Who uses B-trees and why?</a></li>
+      <li><a href="?q=Wie+gro%C3%9F+ist+die+SQLite-Bibliothek%3F&amp;collection=wikipedia"><span class="rs-ex-src">Wikipedia · German</span>Wie groß ist die SQLite-Bibliothek?</a></li>
+      <li><a href="?q=How+does+ragite+split+documents+into+chunks%3F"><span class="rs-ex-src">ragite docs</span>How does ragite split documents into chunks?</a></li>
+    </ul>
+
+    <section class="rs-how" aria-labelledby="rs-how-h">
+      <h2 class="rs-h2" id="rs-how-h">What is hybrid search?</h2>
+      <div class="rs-how-grid">
+        <div class="rs-how-step"><span class="rs-how-ico rs-how-ico--lens" aria-hidden="true"></span><h3>Meaning</h3>
+          <p>Every passage is turned into a vector on the CPU. Passages that say the same thing in other words rank high.</p></div>
+        <div class="rs-how-step"><span class="rs-how-ico rs-how-ico--doc" aria-hidden="true"></span><h3>Keywords</h3>
+          <p>BM25 full-text search finds the exact terms: names, functions, error messages.</p></div>
+        <div class="rs-how-step"><span class="rs-how-ico rs-how-ico--hit" aria-hidden="true"></span><h3>Fused</h3>
+          <p>Reciprocal Rank Fusion merges both rankings. A passage that is high in both comes first: that's the hit.</p></div>
+      </div>
+      <p class="rs-how-foot">All of it is one query against ragite's <code>docs_chunks</code> table:
+        <code>WHERE docs_chunks MATCH 'your question'</code>. Every search links to its SQL.</p>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div class="rs-foot">
+  Powered by <a href="https://datasette.io/">Datasette</a> and <a href="https://github.com/pihme/ragite">ragite</a>
+  · Data license: <a href="https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md">Mixed, see DATA_SOURCES.md</a>
+  (SQLite docs: public domain · Wikipedia: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, authors in each article's history · ragite docs: MIT OR Apache-2.0)
+  · Data source: <a href="https://github.com/pihme/ragite-demo">ragite-demo</a>
+  · About: <a href="https://pihme.github.io/ragite-demo/">Project site</a>
 </div>
 {% endblock %}

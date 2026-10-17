@@ -45,6 +45,11 @@ HELPER_CASES = [
     ("highlight", ['Tom & "Jerry"', "amp quot"], "Tom &amp; &quot;Jerry&quot;"),
     ("highlight", ["amp & <amp>", "amp"], "<mark>amp</mark> &amp; &lt;<mark>amp</mark>&gt;"),
     ("highlight", ["WAL mode in wal.html", "wal"], "<mark>WAL</mark> mode in <mark>wal</mark>.html"),
+    # A term must start a word and marks the whole word, never a piece of an identifier.
+    ("highlight", ["auto_vacuum mode", "vacuum"], "<mark>auto_vacuum</mark> mode"),
+    ("highlight", ["xvacuum", "vacuum"], "xvacuum"),
+    # Neighbouring hits separated only by a space or hyphen become one mark.
+    ("highlight", ["Write-Ahead Logging", "write ahead logging"], "<mark>Write-Ahead Logging</mark>"),
     # Context under a short hit: one paragraph per chunk, highlighted and escaped like the hit.
     ("contextHtml", ['["The VACUUM <command>"]', "vacuum"],
      '<div class="rs-card-context" title="The text that follows this passage in the document">'

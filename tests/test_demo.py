@@ -6,6 +6,7 @@ the library (default: ./libragite.so, where build-demo-db puts the release).
 
 import json
 import os
+import re
 import sqlite3
 from pathlib import Path
 
@@ -105,6 +106,39 @@ async def test_search_page_and_assets(ds):
     assert 'id="rs-filter-hint"' in page.text
     for asset in ("search.js", "search.css"):
         assert (await ds.client.get(f"/static/{asset}")).status_code == 200
+    # The source filter is a set of radio chips with the same parameter name and values (SPEC D10).
+    for value in ("", "sqlite-docs", "wikipedia", "ragite-docs"):
+        assert f'name="collection" value="{value}"' in page.text, value
+
+
+@pytest.mark.asyncio
+async def test_global_style_and_fonts_are_local(ds):
+    # SPEC D11: Datasette's pages load one global stylesheet and script; fonts are served from static/.
+    home = await ds.client.get("/")
+    assert "/static/ragite-demo.css" in home.text and "/static/ragite-demo.js" in home.text
+    assert "Powered by" in home.text and "datasette.io" in home.text
+    css = (await ds.client.get("/static/ragite-demo.css")).text
+    # Dark only: no light variant and no switch on the OS setting.
+    assert "color-scheme: dark;" in css and "@media (prefers-color-scheme" not in css
+    fonts = re.findall(r"url\(([^)]+)\)", css)
+    assert fonts and all(f.startswith("/static/fonts/") for f in fonts), fonts
+    for f in fonts:
+        resp = await ds.client.get(f)
+        assert resp.status_code == 200 and len(resp.content) > 1000, f
+    for asset in ("ragite-demo.js", "fonts/OFL-geist.txt", "fonts/OFL-geist-mono.txt", "fonts/OFL-space-grotesk.txt"):
+        assert (await ds.client.get(f"/static/{asset}")).status_code == 200, asset
+
+
+@pytest.mark.asyncio
+async def test_search_rows_point_at_their_chunk(ds):
+    # The search page links every card to /demo/docs_chunks/{chunk_id}; that row must be the hit.
+    found = await rows(ds, "search", q="What is write-ahead logging?")
+    assert found
+    for r in found:
+        resp = await ds.client.get(f"/demo/docs_chunks/{r['chunk_id']}.json", params={"_shape": "objects"})
+        assert resp.status_code == 200, resp.text
+        (chunk,) = resp.json()["rows"]
+        assert (chunk["doc_id"], chunk["start"], chunk["chunk"]) == (r["doc_id"], r["start"], r["chunk"])
 
 
 @pytest.mark.asyncio
