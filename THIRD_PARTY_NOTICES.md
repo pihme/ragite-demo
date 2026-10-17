@@ -1,6 +1,16 @@
 # Third-party software and data
 
-ragite-demo itself is licensed under [MIT](LICENSE). This repository contains no third-party code or data: everything below is downloaded or installed when you build or run the demo, and keeps its own license.
+ragite-demo itself is licensed under [MIT](LICENSE). The only third-party files in this repository are the web fonts listed first. Everything else below is downloaded or installed when you build or run the demo, and keeps its own license.
+
+## Fonts (included)
+
+Latin subsets in WOFF2 format in `app/static/fonts/`, served by the demo itself (no font CDN). Each is licensed under the [SIL Open Font License 1.1](https://openfontlicense.org/); the full licence text with the copyright line sits next to the font file. No Reserved Font Name is declared.
+
+| Font | Version | File | Copyright | License text |
+| --- | --- | --- | --- | --- |
+| [Space Grotesk](https://github.com/floriankarsten/space-grotesk) (variable, weight 300–700) | 2.000 | `space-grotesk.woff2` | Copyright 2020 The Space Grotesk Project Authors | [`OFL-space-grotesk.txt`](app/static/fonts/OFL-space-grotesk.txt) |
+| [Geist](https://github.com/vercel/geist-font) (variable, weight 100–900) | 1.800 | `geist.woff2` | Copyright 2024 The Geist Project Authors | [`OFL-geist.txt`](app/static/fonts/OFL-geist.txt) |
+| [Geist Mono](https://github.com/vercel/geist-font) (variable, weight 100–900) | 1.701 | `geist-mono.woff2` | Copyright 2024 The Geist Project Authors | [`OFL-geist-mono.txt`](app/static/fonts/OFL-geist-mono.txt) |
 
 ## Data indexed into demo.db (downloaded, not included)
 

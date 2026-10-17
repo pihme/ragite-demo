@@ -1,0 +1,164 @@
+/* ragite-demo: global theme for Datasette's default pages and the search page.
+   Loaded on every page through extra_css_urls (metadata.yml). Sits on top of Datasette's app.css;
+   only colours, type, spacing and a few layout fixes are changed, never the page structure.
+   Tokens follow website-design-spec.md (--rg-*). Light by default, dark with the OS setting. */
+
+@font-face { font-family: "Space Grotesk"; src: url(/static/fonts/space-grotesk.woff2) format("woff2"); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: "Geist"; src: url(/static/fonts/geist.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url(/static/fonts/geist-mono.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+
+:root {
+  color-scheme: light dark;
+  --rg-bg: #f6f9fb; --rg-bg-dots: #dbe5ec; --rg-surface: #ffffff; --rg-surface-2: #ebf2f6; --rg-code-bg: #eef4f8;
+  --rg-line: #cfdde7; --rg-line-strong: #7a91a3;
+  --rg-text: #0a141f; --rg-text-soft: #26394d; --rg-muted: #4b6478; --rg-subtle: #5d7488;
+  --rg-accent: #2b6f8a; --rg-accent-strong: #1d4f63; --rg-on-accent: #ffffff; --rg-link: #1f5e77; --rg-focus: #2b6f8a;
+  --rg-hit: #e09a2e; --rg-hit-text: #8a5300; --rg-hit-bg: #f9edd9; --rg-on-hit: #0a141f;
+  --rg-demo: #5c7a2e;                     /* olive: identity of the demo only (wordmark suffix, header rule) */
+  --rg-header-bg: #0a141f; --rg-header-text: #e7eef5; --rg-header-muted: #8ea4b8;
+  --rg-logo-doc: #3f8fb0; --rg-logo-lens: #7cc3df; --rg-logo-hit: #f2b65c;  /* header is always dark */
+  --rg-mark-doc: #1d4f63; --rg-mark-lens: #2b6f8a; --rg-mark-hit: #e09a2e;  /* mark on page surfaces */
+  --rg-font-display: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --rg-font-body: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rg-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --rg-radius-xs: 4px; --rg-radius-sm: 7px; --rg-radius-md: 10px; --rg-radius-lg: 14px;
+  --rg-shadow: 0 1px 2px rgba(10, 20, 31, .05), 0 8px 24px -16px rgba(10, 20, 31, .25);
+  --rg-max: 72rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rg-bg: #0a141f; --rg-bg-dots: #13253a; --rg-surface: #0f1d2c; --rg-surface-2: #13253a; --rg-code-bg: #07101a;
+    --rg-line: #1e3349; --rg-line-strong: #56779a;
+    --rg-text: #e7eef5; --rg-text-soft: #b9c9d8; --rg-muted: #8ea4b8; --rg-subtle: #7d93a8;
+    --rg-accent: #7cc3df; --rg-accent-strong: #3f8fb0; --rg-on-accent: #06111b; --rg-link: #7cc3df; --rg-focus: #7cc3df;
+    --rg-hit: #f2b65c; --rg-hit-text: #f2b65c; --rg-hit-bg: #2f2e29; --rg-on-hit: #0a141f;
+    --rg-demo: #a9c97a;
+    --rg-mark-doc: #3f8fb0; --rg-mark-lens: #7cc3df; --rg-mark-hit: #f2b65c;
+    --rg-header-bg: #07101a;
+    --rg-shadow: 0 1px 0 rgba(255, 255, 255, .02), 0 12px 32px -18px rgba(0, 0, 0, .8);
+  }
+}
+
+/* ---------- base ---------- */
+html { background: var(--rg-bg); }
+body {
+  background: var(--rg-bg) radial-gradient(circle at 1px 1px, var(--rg-bg-dots) 1px, transparent 1.3px) 0 0 / 26px 26px;
+  color: var(--rg-text); font-family: var(--rg-font-body); font-size: 1rem; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; min-height: 100vh;
+}
+.not-footer { flex: 1 0 auto; }
+h1, h2, h3, h4 { font-family: var(--rg-font-display); letter-spacing: -.015em; color: var(--rg-text); }
+h1 { font-size: 2.25rem; line-height: 1.1; font-weight: 700; letter-spacing: -.03em; margin: 1.5rem 0 .75rem; }
+h2 { font-size: 1.5rem; font-weight: 600; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+a:link, a:visited { color: var(--rg-link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+a:hover, a:focus { color: var(--rg-text); }
+:focus-visible { outline: 2px solid var(--rg-focus); outline-offset: 2px; }
+::selection { background: var(--rg-hit-bg); color: var(--rg-text); }
+code, pre, td.type-pk, .wrapped-sql, pre#sql-query, form.sql textarea { font-family: var(--rg-font-mono); }
+section.content { max-width: var(--rg-max); margin: 0 auto; padding: 0 1.5rem 2rem; box-sizing: border-box; width: 100%; }
+p { margin: .5rem 0 1rem; }
+
+/* Datasette's per-database colour stripe (inline style) becomes the accent */
+h1[style], h2[style], .page-header[style] { border-left-color: var(--rg-accent) !important; border-left-width: 4px !important; padding-left: .75rem !important; }
+.page-header { margin-top: 1.5rem; }
+.page-header h1 { font-size: 2.25rem; }
+
+/* ---------- header (brand + links are added by ragite-demo.js) ---------- */
+header {
+  background: var(--rg-header-bg); color: var(--rg-header-text); padding: 0; min-height: 0;
+  border-bottom: 2px solid var(--rg-demo); overflow: visible;
+}
+header > nav { max-width: var(--rg-max); margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; gap: 1.25rem; box-sizing: border-box; }
+header .crumbs { float: none; font: 500 .8rem var(--rg-font-mono); color: var(--rg-header-muted); letter-spacing: .02em; }
+header a:link, header a:visited { color: var(--rg-header-muted); }
+header a:hover, header a:focus { color: var(--rg-header-text); }
+.rd-brand { display: inline-flex; align-items: center; gap: .55rem; text-decoration: none !important; font: 600 1.15rem var(--rg-font-display); letter-spacing: -.01em; }
+header a.rd-brand:link, header a.rd-brand:visited { color: var(--rg-header-text); }
+.rd-brand svg { width: 26px; height: 26px; flex: none; }
+.rd-brand .rd-suffix { color: #a9c97a; }
+.rd-sep { width: 1px; height: 22px; background: #1e3349; }
+.rd-links { margin-left: auto; display: flex; gap: .25rem; align-items: center; }
+.rd-links a { font: 500 .8rem var(--rg-font-mono); letter-spacing: .06em; text-transform: uppercase; padding: .45rem .7rem; border-radius: var(--rg-radius-sm); border: 1px solid transparent; }
+.rd-links a:hover { border-color: #1e3349; background: #13253a; }
+.rd-links a[aria-current="page"] { color: var(--rg-header-text) !important; background: #13253a; box-shadow: inset 0 -2px 0 #7cc3df; }
+header .rd-links a.rd-cta:link, header .rd-links a.rd-cta:visited { color: #06111b; background: #7cc3df; text-transform: none; letter-spacing: 0; font: 600 .9rem var(--rg-font-display); }
+header .rd-links a.rd-cta:hover { background: #a6d7ea; }
+details.nav-menu > summary { float: none; }
+
+/* ---------- footer ---------- */
+footer.ft {
+  background: transparent; color: var(--rg-subtle); border-top: 1px solid var(--rg-line); margin-top: 3rem;
+  padding: 1.25rem 1.5rem 2rem; font: 400 .8rem/1.7 var(--rg-font-mono); max-width: var(--rg-max); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; min-height: 0;
+}
+footer a:link, footer a:visited { color: var(--rg-muted) !important; }
+footer a:hover { color: var(--rg-text) !important; }
+
+/* ---------- home (description_html in metadata.yml) ---------- */
+body.index h1 { font-size: 3rem; margin-top: 2.5rem; }
+.rd-home { max-width: 46rem; }
+.rd-home-lede { font-size: 1.2rem; color: var(--rg-text-soft); }
+.rd-home-search { display: flex; gap: .5rem; margin: 1.25rem 0 .75rem; }
+.rd-home-search input[type=search] { flex: 1; width: auto !important; }
+.rd-home-links { font-size: .95rem; color: var(--rg-muted); }
+body.index h2 { margin-top: 2.5rem; font-size: 1.25rem; }
+body.index section.content > p { color: var(--rg-muted); }
+.rd-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- forms and buttons ---------- */
+input[type=text], input[type=search], form input[type=text], form input[type=search], select, textarea {
+  background: var(--rg-surface); color: var(--rg-text); border: 1px solid var(--rg-line-strong) !important;
+  border-radius: var(--rg-radius-sm) !important; font-family: var(--rg-font-body) !important; padding: .6rem .75rem !important;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--rg-focus); outline-offset: 1px; border-color: var(--rg-accent) !important; }
+form input[type=submit], .rd-home-search button, form button[type=submit] {
+  background: var(--rg-accent); border: 1px solid var(--rg-accent); color: var(--rg-on-accent);
+  border-radius: var(--rg-radius-sm); font: 600 .95rem var(--rg-font-display); padding: .6rem 1.1rem; cursor: pointer;
+}
+form input[type=submit]:hover, .rd-home-search button:hover { filter: brightness(1.08); }
+form button[type=button] { background: transparent; color: var(--rg-text); border: 1px solid var(--rg-line-strong); border-radius: var(--rg-radius-sm); font-family: var(--rg-font-display); }
+.select-wrapper { background: var(--rg-surface); border-color: var(--rg-line-strong); border-radius: var(--rg-radius-sm); }
+.select-wrapper select { color: var(--rg-text); padding: 9px 8px !important; border: 0 !important; }
+.select-wrapper::after { color: var(--rg-muted); }
+form label { color: var(--rg-muted); }
+
+/* ---------- SQL: canned queries never overflow the page ---------- */
+pre#sql-query, .wrapped-sql {
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 22rem; overflow: auto;
+  background: var(--rg-code-bg); border: 1px solid var(--rg-line); border-radius: var(--rg-radius-md); padding: .9rem 1rem; font-size: .82rem; line-height: 1.6;
+}
+.show-hide-sql { font: 400 .85rem var(--rg-font-body); }
+/* CodeMirror 5 (Datasette 0.65 SQL editor). Its CSS loads after ours, hence the "body" prefix. */
+body .CodeMirror { font-family: var(--rg-font-mono); font-size: .9rem; border: 1px solid var(--rg-line) !important; border-radius: var(--rg-radius-md); background: var(--rg-code-bg); color: var(--rg-text); }
+body .CodeMirror-gutters { background: var(--rg-code-bg); border-right: 1px solid var(--rg-line); }
+body .CodeMirror-linenumber { color: var(--rg-subtle); }
+body .CodeMirror-cursor { border-left-color: var(--rg-text); }
+body .CodeMirror-selected, .CodeMirror-focused .CodeMirror-selected { background: var(--rg-hit-bg) !important; }
+body .cm-s-default .cm-keyword { color: var(--rg-code-keyword, #1f5e77); font-weight: 600; }
+body .cm-s-default .cm-string { color: var(--rg-code-string, #2f7a4a); }
+body .cm-s-default .cm-comment { color: var(--rg-code-comment, #5a7186); }
+body .cm-s-default .cm-number { color: var(--rg-text-soft); }
+@media (prefers-color-scheme: dark) { :root { --rg-code-keyword: #b9e3f2; --rg-code-string: #9fe0b5; --rg-code-comment: #7389a0; } }
+
+/* ---------- tables ---------- */
+.table-wrapper { overflow-x: auto; border: 1px solid var(--rg-line); border-radius: var(--rg-radius-md); background: var(--rg-surface); }
+table.rows-and-columns { width: 100%; }
+th { font: 500 .72rem var(--rg-font-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--rg-muted); background: var(--rg-code-bg); text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--rg-line); }
+th a:link, th a:visited { color: var(--rg-muted); }
+td { border-top: 1px solid var(--rg-line); border-right: 0; padding: .55rem .75rem; font-size: .92rem; max-width: 42rem; }
+td em { color: var(--rg-subtle); }
+.rows-and-columns td:before { color: var(--rg-muted); }
+tr:hover td { background: color-mix(in srgb, var(--rg-accent) 5%, transparent); }
+.facet-info { background: var(--rg-surface); border: 1px solid var(--rg-line); border-radius: var(--rg-radius-md); padding: .75rem 1rem; }
+.export-links, .suggested-facets, .count-sql, p.message-info, .filters { color: var(--rg-muted); }
+p.message-error, p.message-warning, p.message-info { border-radius: var(--rg-radius-md); }
+
+@media (max-width: 760px) {
+  header > nav { height: auto; flex-wrap: wrap; padding: .6rem 1rem; gap: .5rem 1rem; }
+  .rd-sep, header .crumbs { display: none; }
+  .rd-links { margin-left: 0; width: 100%; overflow-x: auto; }
+  section.content { padding: 0 1rem 2rem; }
+  body.index h1 { font-size: 2.25rem; }
+  .rd-home-search { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

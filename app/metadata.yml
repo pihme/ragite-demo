@@ -1,12 +1,26 @@
-title: ragite demo
+title: ragite-demo
 description_html: |-
-  Hybrid search over the SQLite documentation, a few Wikipedia articles and the ragite docs,
-  run by the <a href="https://github.com/pihme/ragite">ragite</a> SQLite extension.
-  <strong><a href="/search">Open the search page</a></strong> or use the canned queries below.
+  <div class="rd-home">
+    <p class="rd-home-lede">Hybrid search over the SQLite documentation, a few Wikipedia articles and the ragite docs,
+    run by the <a href="https://github.com/pihme/ragite">ragite</a> SQLite extension. Everything is in one SQLite file.</p>
+    <form class="rd-home-search" action="/search" method="get" role="search">
+      <label class="rd-visually-hidden" for="rd-home-q">Ask the docs</label>
+      <input id="rd-home-q" name="q" type="search" placeholder="Ask the docs, e.g. How do I copy a database while it is in use?">
+      <button type="submit">Search</button>
+    </form>
+    <p class="rd-home-links"><a href="/search">Search page</a> · <a href="/demo#queries">Canned queries</a> ·
+    <a href="/demo/doc_info">All documents</a> · <a href="/demo">Write SQL</a></p>
+  </div>
 license: Mixed, see DATA_SOURCES.md
 license_url: https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md
 source: ragite-demo
 source_url: https://github.com/pihme/ragite-demo
+about: Project site
+about_url: https://pihme.github.io/ragite-demo/
+extra_css_urls:
+  - /static/ragite-demo.css
+extra_js_urls:
+  - /static/ragite-demo.js
 databases:
   demo:
     tables:
@@ -19,6 +33,7 @@ databases:
         sort: doc_id
       build_info:
         description: Versions and checksums of the build that produced this file.
+      sqlite_sequence: {hidden: true}
       docs_documents: {hidden: true}
       docs_chunk_rows: {hidden: true}
       docs_model: {hidden: true}
@@ -32,6 +47,7 @@ databases:
     queries:
       search:
         title: Search passages (hybrid)
+        hide_sql: true
         description: >-
           Hybrid search: vector similarity and BM25 full-text ranking fused with Reciprocal Rank Fusion,
           on docs_chunks. A short hit (under 80 characters, often a bare heading) gets the next chunks
@@ -40,7 +56,8 @@ databases:
           shown when at least half of it is already displayed by better cards of the same document; a
           hit that is shown already, a short hit whose context is all shown, or a card with the same
           text as a better card is dropped, and shown context is left out. spans lists the displayed
-          [start, end) spans. collection is optional (sqlite-docs, wikipedia or ragite-docs).
+          [start, end) spans; chunk_id is the hit's rowid in docs_chunks. collection is optional
+          (sqlite-docs, wikipedia or ragite-docs).
         sql: |-
           with recursive
           hits as materialized (
@@ -118,7 +135,7 @@ databases:
           select k.title, k.url, k.collection, k.heading_path, k.chunk,
                  (select json_group_array(json_extract(v.value, '$[3]')) from json_each(k.ctx_items) v
                   where 2 * (select coalesce(sum(max(0, min(json_extract(v.value, '$[2]'), json_extract(b.value, '$[2]')) - max(json_extract(v.value, '$[1]'), json_extract(b.value, '$[1]')))), 0) from json_each(k.before) b where json_extract(b.value, '$[0]') = json_extract(v.value, '$[0]')) < json_extract(v.value, '$[2]') - json_extract(v.value, '$[1]')) as context,
-                 round(k.score, 5) as score, k.doc_id, k.start, k.card_end as "end",
+                 round(k.score, 5) as score, k.chunk_id, k.doc_id, k.start, k.card_end as "end",
                  (select json_group_array(json_array(json_extract(v.value, '$[1]'), json_extract(v.value, '$[2]')))
                   from (select k.hit_span as value
                         union all
