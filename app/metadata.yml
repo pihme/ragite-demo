@@ -22,6 +22,7 @@ databases:
       docs_documents: {hidden: true}
       docs_chunk_rows: {hidden: true}
       docs_model: {hidden: true}
+      # Storage tables ragite creates; hidden from the table list only, never queried.
       docs_vec: {hidden: true}
       docs_vec_chunks: {hidden: true}
       docs_vec_info: {hidden: true}
@@ -47,51 +48,13 @@ databases:
           limit 20
       search_documents:
         title: Search documents (hybrid)
-        description: One row per document, ranked by its best chunk.
+        description: One row per document, ranked by its best chunk. collection is optional.
         sql: |-
           with hits as materialized (
             select doc_id, score from docs where docs match :q
           )
           select i.title, i.url, i.collection, i.lang, round(hits.score, 5) as score
           from hits join doc_info i on i.doc_id = hits.doc_id
+          where :collection = '' or i.collection = :collection
           order by hits.score desc, hits.doc_id
           limit 10
-      vector_search:
-        title: Search chunks (vector only)
-        description: >-
-          Nearest chunks by cosine distance, using ragite_embed() and the sqlite-vec table ragite maintains.
-          similarity = 1 - cosine distance.
-        sql: |-
-          with hits as materialized (
-            select rowid as chunk_id, distance
-            from docs_vec
-            where embedding match ragite_embed('docs', coalesce(nullif(:q, ''), ' '), 'query') and k = 50
-          )
-          select i.title, i.url, i.collection, c.heading_path, c.chunk, round(1 - hits.distance, 5) as score
-          from hits
-          join docs_chunks c on c.rowid = hits.chunk_id
-          join doc_info i on i.doc_id = c.doc_id
-          where :q <> '' and (:collection = '' or i.collection = :collection)
-          order by hits.distance, hits.chunk_id
-          limit 20
-      fulltext_search:
-        title: Search chunks (full text only)
-        description: >-
-          BM25 over the FTS5 table ragite maintains (unicode61 tokenizer, no stemming).
-          q is FTS5 query syntax, for example: vacuum into, "write-ahead log", journal NOT wal.
-          score = -bm25, higher is better.
-        sql: |-
-          with hits as materialized (
-            select rowid as chunk_id, bm25(docs_fts) as bm25
-            from docs_fts
-            where docs_fts match :q
-            order by rank
-            limit 200
-          )
-          select i.title, i.url, i.collection, c.heading_path, c.chunk, round(-hits.bm25, 5) as score
-          from hits
-          join docs_chunks c on c.rowid = hits.chunk_id
-          join doc_info i on i.doc_id = c.doc_id
-          where :collection = '' or i.collection = :collection
-          order by hits.bm25, hits.chunk_id
-          limit 20

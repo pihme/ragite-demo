@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Query a running Datasette over HTTP: the search page and one search per mode must answer.
+# Query a running Datasette over HTTP: the search page and the hybrid canned queries must answer.
 # Usage: scripts/smoke http://127.0.0.1:8001
 set -euo pipefail
 base="${1:-http://127.0.0.1:8001}"
@@ -13,9 +13,9 @@ curl -fsS "$base/search" | grep -q 'id="rs-q"'
 echo "ok   /search"
 
 check() {
-  local query="$1" q="$2" want="$3"
+  local query="$1" q="$2" want="$3" collection="${4:-}"
   local body
-  body=$(curl -fsS -G "$base/demo/$query.json" --data-urlencode "q=$q" --data-urlencode "collection=" --data-urlencode "_shape=array")
+  body=$(curl -fsS -G "$base/demo/$query.json" --data-urlencode "q=$q" --data-urlencode "collection=$collection" --data-urlencode "_shape=array")
   python3 - "$query" "$q" "$want" "$body" <<'PY'
 import json, sys
 query, q, want, body = sys.argv[1:]
@@ -28,6 +28,6 @@ PY
 }
 
 check search "How do I copy a database while it is in use?" backup.html
-check vector_search "What is write-ahead logging?" wal.html
-check fulltext_search '"vacuum" "into"' lang_vacuum.html
+check search "What is write-ahead logging?" wal.html
+check search "What is a B-tree?" wikipedia.org wikipedia
 check search_documents "What is a B-tree?" B-tree

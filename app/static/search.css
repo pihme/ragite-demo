@@ -8,11 +8,6 @@
 .rs button.rs-go { font-size: 1.1rem; padding: 0.7rem 1.4rem; border: 0; border-radius: 0.6rem; background: #2563eb; color: #fff; cursor: pointer; }
 .rs button.rs-go:hover { background: #1d4ed8; }
 .rs-options { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
-.rs-modes { border: 0; padding: 0; margin: 0; display: inline-flex; border: 1px solid #cbd2dc; border-radius: 999px; overflow: hidden; }
-.rs-modes label { padding: 0.35rem 0.9rem; cursor: pointer; white-space: nowrap; }
-.rs-modes input { position: absolute; opacity: 0; }
-.rs-modes label:has(input:checked) { background: #1f2937; color: #fff; }
-.rs-modes label:has(input:focus-visible) { outline: 2px solid #2563eb; }
 .rs-coll select { font-size: 1rem; padding: 0.25rem; }
 .rs-examples { color: #555; font-size: 0.95rem; }
 .rs-status { color: #555; min-height: 1.4em; }

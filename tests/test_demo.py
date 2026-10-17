@@ -71,28 +71,27 @@ async def test_collection_filter(ds):
 
 
 @pytest.mark.asyncio
-async def test_vector_search(ds):
-    found = await rows(ds, "vector_search", q="What is write-ahead logging?")
-    assert found and "wal.html" in found[0]["url"]
-    assert all(-1.0 <= r["score"] <= 1.0 for r in found)
-
-
-@pytest.mark.asyncio
-async def test_fulltext_search(ds):
-    found = await rows(ds, "fulltext_search", q='"vacuum" "into"')
-    assert found and all("vacuum" in r["chunk"].lower() for r in found)
-
-
-@pytest.mark.asyncio
 async def test_document_search(ds):
     found = await rows(ds, "search_documents", q="command line shell output modes")
     assert any("cli.html" in r["url"] for r in found[:3])
+    assert len({r["url"] for r in found}) == len(found)
+    wiki = await rows(ds, "search_documents", q="What is a B-tree?", collection="wikipedia")
+    assert wiki and all(r["collection"] == "wikipedia" for r in wiki)
 
 
 @pytest.mark.asyncio
 async def test_empty_query_returns_nothing(ds):
-    for query in ("search", "vector_search"):
+    for query in ("search", "search_documents"):
         assert await rows(ds, query, q="") == []
+
+
+@pytest.mark.asyncio
+async def test_only_hybrid_queries_are_offered(ds):
+    # The demo uses ragite's public interface only: MATCH on docs and docs_chunks.
+    queries = (await ds.client.get("/demo.json")).json()["queries"]
+    assert sorted(q["name"] for q in queries) == ["search", "search_documents"]
+    for q in queries:
+        assert "docs_vec" not in q["sql"] and "docs_fts" not in q["sql"]
 
 
 @pytest.mark.asyncio
@@ -100,5 +99,6 @@ async def test_search_page_and_assets(ds):
     page = await ds.client.get("/search")
     assert page.status_code == 200
     assert 'id="rs-q"' in page.text and "/static/search.js" in page.text
+    assert 'name="mode"' not in page.text
     for asset in ("search.js", "search.css"):
         assert (await ds.client.get(f"/static/{asset}")).status_code == 200

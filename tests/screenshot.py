@@ -12,9 +12,8 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 SHOTS = [
-    ("search-hybrid.png", "/search?q=How+do+I+copy+a+database+while+it+is+in+use%3F"),
-    ("search-vector.png", "/search?q=What+is+write-ahead+logging%3F&mode=vector"),
-    ("search-fulltext.png", "/search?q=vacuum+into&mode=fulltext"),
+    ("search.png", "/search?q=How+do+I+copy+a+database+while+it+is+in+use%3F"),
+    ("search-wikipedia.png", "/search?q=What+is+a+B-tree%3F&collection=wikipedia"),
 ]
 
 

@@ -18,7 +18,7 @@ Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.6
 - `app/`: Datasette configuration directory (`metadata.yml` canned queries, `settings.json`, `templates/pages/search.html`, `static/`).
 - `tests/`: Datasette test-client checks (`test_demo.py`) and the Playwright screenshot script used in CI.
 
-Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed data, with attribution in `DATA_SOURCES.md` and `doc_info`; no CDN or external service at run time; use only the ragite SQL interface documented in its README and SPEC; heavy work runs in CI.
+Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed data, with attribution in `DATA_SOURCES.md` and `doc_info`; no CDN or external service at run time; use only ragite's public SQL interface (hybrid `MATCH` on `docs` and `docs_chunks`, never its storage tables, SPEC D2); heavy work runs in CI.
 
 - Tests: `make test` must pass before anything lands on `main`. Tests stay offline: no real accounts, tokens or live services.
 - No releases yet: there is no release workflow and no version file. CI uploads `demo.db` as an artifact.

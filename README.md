@@ -39,18 +39,16 @@ Pass the library path **without** `.so`: SQLite adds the suffix itself (see the 
 
 ## What you can do
 
-**Search page** (`/search`): type a question, pick *Hybrid*, *Vector* or *Full text*, and optionally limit it to one source. Results are cards with the document title, the heading path inside the document, the matching chunk with your words highlighted, the source link and the score. Every search links to the same query as SQL.
+**Search page** (`/search`): type a question and optionally limit it to one source. Results are cards with the document title, the heading path inside the document, the matching chunk with your words highlighted, the source link and the score. Every search links to the same query as SQL.
 
-**Canned queries** (`/demo`), usable from the browser or as JSON (`/demo/search.json?q=...&collection=&_shape=array`):
+**Canned queries** (`/demo`, hybrid search only), usable from the browser or as JSON (`/demo/search.json?q=...&collection=&_shape=array`):
 
 | Query | Ranking | Score |
 | --- | --- | --- |
 | `search` | Hybrid: `docs_chunks MATCH :q`, vector and BM25 fused by Reciprocal Rank Fusion | RRF score, higher is better (at most 2/61) |
 | `search_documents` | Hybrid, one row per document (`docs MATCH :q`) | RRF score of the best chunk |
-| `vector_search` | Vector only: `ragite_embed('docs', :q, 'query')` against the sqlite-vec table ragite maintains | cosine similarity |
-| `fulltext_search` | Full text only: FTS5 `MATCH` on the table ragite maintains, FTS5 query syntax | −bm25, higher is better |
 
-`collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
+Both use only ragite's public interface, `MATCH` on the Document table and its `_chunks` companion. `collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
 
 **Raw SQL** (`/demo?sql=...`), for example:
 
@@ -78,7 +76,7 @@ That is 8,778 chunks and a 24 MB `demo.db` (2 KB of vector per chunk). Exact sou
 ## Limits
 
 - The built-in model (potion-retrieval-32M) is trained for English. In this small set, German questions still find the German Wikipedia article, but expect weaker ranking for non-English text in general.
-- Hybrid full text matches the query as one phrase, so long questions usually rank by vector similarity alone. The *Full text* mode instead requires every word.
+- ragite's full-text side matches the query as one phrase, so long questions usually rank by vector similarity alone; short keyword queries get both.
 - The SQLite docs link to sqlite.org, which may already describe a newer version than 3.54.1.
 
 ## Tests
