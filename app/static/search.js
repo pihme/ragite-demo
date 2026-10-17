@@ -174,7 +174,7 @@
   }
 
   function setColl(v) {
-    const c = chips.querySelector('input[value="' + (v || "") + '"]') || chips.querySelector('input[value=""]');
+    const c = [...chips.querySelectorAll("input")].find((i) => i.value === (v || "")) || chips.querySelector('input[value=""]');
     c.checked = true;
   }
 

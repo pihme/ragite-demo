@@ -8,6 +8,7 @@ Fails when the page shows no result cards, so it doubles as a browser smoke test
 import os
 import sys
 from pathlib import Path
+from urllib.parse import urlencode
 
 from playwright.sync_api import sync_playwright
 
@@ -36,6 +37,7 @@ def main() -> None:
                 sys.exit(f"{path}: no result cards")
         check_page_helpers(page)
         check_filter_hint(page, base, out)
+        check_odd_collection(page, base)
         browser.close()
 
 
@@ -84,6 +86,19 @@ def check_filter_hint(page, base: str, out: Path) -> None:
     if "ragite#49" not in hint:
         sys.exit(f"source filter hint missing: {hint!r}")
     print("filter hint: ok")
+
+
+def check_odd_collection(page, base: str) -> None:
+    """A hand-made `collection` value with a quote or backslash must fall back to "All sources", not break the page."""
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    for value in ('"]', "\\", 'a"b\\c'):
+        page.goto(base + "/search?" + urlencode({"q": "vacuum", "collection": value}))
+        page.wait_for_selector(".rs-card", timeout=30_000)
+        checked = page.eval_on_selector('input[name="collection"]:checked', "i => i.value")
+        if errors or checked != "":
+            sys.exit(f"collection={value!r}: checked {checked!r}, page errors {errors!r}")
+    print("odd collection values: ok")
 
 
 if __name__ == "__main__":
