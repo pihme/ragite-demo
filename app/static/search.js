@@ -22,11 +22,19 @@
     return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // Match the query words on the raw chunk text and escape each piece afterwards, so a word like
+  // "amp" or "quot" can never match inside an entity that escaping added.
   function highlight(text, q) {
     const terms = words(q).filter((w) => w.length > 2).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    const safe = escapeHtml(text);
-    if (!terms.length) return safe;
-    return safe.replace(new RegExp("(?<![\\p{L}\\p{N}])(" + terms.join("|") + ")(?![\\p{L}\\p{N}])", "giu"), "<mark>$1</mark>");
+    if (!terms.length) return escapeHtml(text);
+    const re = new RegExp("(?<![\\p{L}\\p{N}])(" + terms.join("|") + ")(?![\\p{L}\\p{N}])", "giu");
+    return text.split(re).map((part, i) => (i % 2 ? "<mark>" + escapeHtml(part) + "</mark>" : escapeHtml(part))).join("");
+  }
+
+  // Control characters (NUL above all) cannot be part of a search; SQLite would reject the query
+  // with an "unterminated string" error, so they become spaces before the query is sent.
+  function cleanQuery(q) {
+    return q.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").trim();
   }
 
   function headingPath(json) {
@@ -57,7 +65,7 @@
   }
 
   async function run(pushState) {
-    const q = input.value.trim();
+    const q = cleanQuery(input.value);
     const coll = collection.value;
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -96,6 +104,9 @@
     collection.value = params.get("collection") || "";
     run(false);
   }
+
+  // Exposed for the browser checks in tests/screenshot.py.
+  window.ragiteSearch = { highlight: highlight, cleanQuery: cleanQuery };
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();

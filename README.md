@@ -10,7 +10,7 @@ ragite is a SQLite extension for retrieval: it splits documents into chunks, emb
 
 - **Linux x86-64.** ragite publishes release binaries for Linux only so far ([pihme/ragite#35](https://github.com/pihme/ragite/issues/35)). On macOS or Windows, use a Linux container or build ragite yourself.
 - Python 3.10+ whose `sqlite3` module can load extensions (true for most Linux builds; check with `python3 -c "import sqlite3; sqlite3.connect(':memory:').enable_load_extension(True)"`).
-- About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~24 MB.
+- About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~22 MB.
 
 ## Quickstart
 
@@ -75,9 +75,9 @@ SQLite normally runs the search first and then looks up `doc_info` by `doc_id`. 
 | Wikipedia: SQLite (en, de), SQL, Relational database, B-tree | 5 | 0.11 MB | CC BY-SA 4.0 |
 | ragite README, SPEC, GLOSSARY | 3 | 0.05 MB | MIT OR Apache-2.0 |
 
-That is 8,778 chunks and a 24 MB `demo.db` (2 KB of vector per chunk). Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
+That is 7,671 chunks and a 22 MB `demo.db` (2 KB of vector per chunk). ragite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
 
-`demo.db` is not committed: it is a 24 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`).
+`demo.db` is not committed: it is a 22 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`).
 
 ## Limits
 

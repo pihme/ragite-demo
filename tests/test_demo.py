@@ -127,3 +127,17 @@ async def test_model_and_embed(ds):
     (emb,) = await rows(ds, "embed", text="write-ahead logging", role="query")
     assert emb["dimensions"] == 512 and len(emb["first_16_bytes"]) == 32
     assert await rows(ds, "embed", text="", role="query") == []
+
+
+@pytest.mark.asyncio
+async def test_few_near_empty_chunks(ds):
+    # The cleaning joins table rows and short lists (scripts/build-demo-db), so near-empty Chunks
+    # are mostly headings, which ragite keeps as their own Chunks. Before the joining: 23 %.
+    resp = await ds.client.get("/demo.json", params={
+        "sql": "SELECT count(*) AS n, sum(length(chunk) < 30) AS short FROM docs_chunks", "_shape": "array"})
+    assert resp.status_code == 200, resp.text
+    row = resp.json()[0]
+    assert row["short"] / row["n"] < 0.16, row
+    nbsp = await ds.client.get("/demo.json", params={
+        "sql": "SELECT count(*) AS n FROM docs_chunks WHERE instr(chunk, char(160)) > 0", "_shape": "array"})
+    assert nbsp.json()[0]["n"] == 0
