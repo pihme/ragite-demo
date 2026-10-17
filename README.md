@@ -1,6 +1,18 @@
-# ragite-demo
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/ragite-demo-readme-lockup-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/ragite-demo-readme-lockup-light.svg">
+    <img alt="ragite-demo" src="docs/assets/ragite-demo-readme-lockup-light.svg" width="400">
+  </picture>
+</h1>
 
 Search the SQLite docs and Wikipedia in your browser with [ragite](https://github.com/pihme/ragite) and [Datasette](https://datasette.io/), offline and in one SQLite file.
+
+[![ci](https://img.shields.io/github/actions/workflow/status/pihme/ragite-demo/ci.yml?branch=main&label=ci&style=flat-square)](https://github.com/pihme/ragite-demo/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-5c7a2e?style=flat-square)](LICENSE)
+[![ragite](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fpihme%2Fragite-demo%2Fmain%2Fdata%2Fsources.json&query=%24.ragite.version&prefix=v&label=ragite&color=2b6f8a&style=flat-square)](data/sources.json)
+
+**[Website](https://pihme.github.io/ragite-demo/)** · [ragite](https://github.com/pihme/ragite) · [Data sources](DATA_SOURCES.md)
 
 ![The search page: a question about copying a live database, answered with passages from the SQLite Backup API docs](docs/search.png)
 
