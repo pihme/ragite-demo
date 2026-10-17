@@ -118,6 +118,8 @@ async def test_global_style_and_fonts_are_local(ds):
     assert "/static/ragite-demo.css" in home.text and "/static/ragite-demo.js" in home.text
     assert "Powered by" in home.text and "datasette.io" in home.text
     css = (await ds.client.get("/static/ragite-demo.css")).text
+    # Dark only: no light variant and no switch on the OS setting.
+    assert "color-scheme: dark;" in css and "@media (prefers-color-scheme" not in css
     fonts = re.findall(r"url\(([^)]+)\)", css)
     assert fonts and all(f.startswith("/static/fonts/") for f in fonts), fonts
     for f in fonts:

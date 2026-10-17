@@ -26,10 +26,6 @@
 .rs-chip:hover { border-color: var(--rg-line-strong); }
 .rs-chip:has(input:checked) { background: var(--rg-accent); border-color: var(--rg-accent); color: var(--rg-on-accent); }
 .rs-chip:has(input:focus-visible) { outline: 2px solid var(--rg-focus); outline-offset: 2px; }
-.rs-count { font: 500 .75rem var(--rg-font-mono); color: var(--rg-muted); min-width: 1ch; }
-.rs-count:empty { display: none; }
-.rs-chip:has(input:checked) .rs-count { color: inherit; opacity: .85; }
-.rs-chip.is-zero:not(:has(input:checked)) { opacity: .6; }
 
 /* status and hint */
 .rs-status { color: var(--rg-muted); font: 400 .85rem var(--rg-font-mono); min-height: 1.4em; margin: 1.25rem 0 .75rem; }

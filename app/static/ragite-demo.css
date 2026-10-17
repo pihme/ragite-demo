@@ -1,42 +1,30 @@
 /* ragite-demo: global theme for Datasette's default pages and the search page.
    Loaded on every page through extra_css_urls (metadata.yml). Sits on top of Datasette's app.css;
    only colours, type, spacing and a few layout fixes are changed, never the page structure.
-   Tokens follow website-design-spec.md (--rg-*). Light by default, dark with the OS setting. */
+   Tokens follow website-design-spec.md (--rg-*). Dark only: no light variant, no prefers-color-scheme switch. */
 
 @font-face { font-family: "Space Grotesk"; src: url(/static/fonts/space-grotesk.woff2) format("woff2"); font-weight: 300 700; font-display: swap; }
 @font-face { font-family: "Geist"; src: url(/static/fonts/geist.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
 @font-face { font-family: "Geist Mono"; src: url(/static/fonts/geist-mono.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
 
 :root {
-  color-scheme: light dark;
-  --rg-bg: #f6f9fb; --rg-bg-dots: #dbe5ec; --rg-surface: #ffffff; --rg-surface-2: #ebf2f6; --rg-code-bg: #eef4f8;
-  --rg-line: #cfdde7; --rg-line-strong: #7a91a3;
-  --rg-text: #0a141f; --rg-text-soft: #26394d; --rg-muted: #4b6478; --rg-subtle: #5d7488;
-  --rg-accent: #2b6f8a; --rg-accent-strong: #1d4f63; --rg-on-accent: #ffffff; --rg-link: #1f5e77; --rg-focus: #2b6f8a;
-  --rg-hit: #e09a2e; --rg-hit-text: #8a5300; --rg-hit-bg: #f9edd9; --rg-on-hit: #0a141f;
-  --rg-demo: #5c7a2e;                     /* olive: identity of the demo only (wordmark suffix, header rule) */
-  --rg-header-bg: #0a141f; --rg-header-text: #e7eef5; --rg-header-muted: #8ea4b8;
-  --rg-logo-doc: #3f8fb0; --rg-logo-lens: #7cc3df; --rg-logo-hit: #f2b65c;  /* header is always dark */
-  --rg-mark-doc: #1d4f63; --rg-mark-lens: #2b6f8a; --rg-mark-hit: #e09a2e;  /* mark on page surfaces */
+  color-scheme: dark;                     /* dark only: there is no light variant */
+  --rg-bg: #0a141f; --rg-bg-dots: #13253a; --rg-surface: #0f1d2c; --rg-surface-2: #13253a; --rg-code-bg: #07101a;
+  --rg-line: #1e3349; --rg-line-strong: #56779a;
+  --rg-text: #e7eef5; --rg-text-soft: #b9c9d8; --rg-muted: #8ea4b8; --rg-subtle: #7d93a8;
+  --rg-accent: #7cc3df; --rg-accent-strong: #3f8fb0; --rg-on-accent: #06111b; --rg-link: #7cc3df; --rg-focus: #7cc3df;
+  --rg-hit: #f2b65c; --rg-hit-text: #f2b65c; --rg-hit-bg: #2f2e29; --rg-on-hit: #0a141f;
+  --rg-demo: #a9c97a;                     /* olive: identity of the demo only (wordmark suffix, header rule) */
+  --rg-header-bg: #07101a; --rg-header-text: #e7eef5; --rg-header-muted: #8ea4b8;
+  --rg-logo-doc: #3f8fb0; --rg-logo-lens: #7cc3df; --rg-logo-hit: #f2b65c;
+  --rg-mark-doc: #3f8fb0; --rg-mark-lens: #7cc3df; --rg-mark-hit: #f2b65c;
+  --rg-code-keyword: #b9e3f2; --rg-code-string: #9fe0b5; --rg-code-comment: #7389a0;
   --rg-font-display: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
   --rg-font-body: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --rg-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --rg-radius-xs: 4px; --rg-radius-sm: 7px; --rg-radius-md: 10px; --rg-radius-lg: 14px;
-  --rg-shadow: 0 1px 2px rgba(10, 20, 31, .05), 0 8px 24px -16px rgba(10, 20, 31, .25);
+  --rg-shadow: 0 1px 0 rgba(255, 255, 255, .02), 0 12px 32px -18px rgba(0, 0, 0, .8);
   --rg-max: 72rem;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --rg-bg: #0a141f; --rg-bg-dots: #13253a; --rg-surface: #0f1d2c; --rg-surface-2: #13253a; --rg-code-bg: #07101a;
-    --rg-line: #1e3349; --rg-line-strong: #56779a;
-    --rg-text: #e7eef5; --rg-text-soft: #b9c9d8; --rg-muted: #8ea4b8; --rg-subtle: #7d93a8;
-    --rg-accent: #7cc3df; --rg-accent-strong: #3f8fb0; --rg-on-accent: #06111b; --rg-link: #7cc3df; --rg-focus: #7cc3df;
-    --rg-hit: #f2b65c; --rg-hit-text: #f2b65c; --rg-hit-bg: #2f2e29; --rg-on-hit: #0a141f;
-    --rg-demo: #a9c97a;
-    --rg-mark-doc: #3f8fb0; --rg-mark-lens: #7cc3df; --rg-mark-hit: #f2b65c;
-    --rg-header-bg: #07101a;
-    --rg-shadow: 0 1px 0 rgba(255, 255, 255, .02), 0 12px 32px -18px rgba(0, 0, 0, .8);
-  }
 }
 
 /* ---------- base ---------- */
@@ -138,7 +126,6 @@ body .cm-s-default .cm-keyword { color: var(--rg-code-keyword, #1f5e77); font-we
 body .cm-s-default .cm-string { color: var(--rg-code-string, #2f7a4a); }
 body .cm-s-default .cm-comment { color: var(--rg-code-comment, #5a7186); }
 body .cm-s-default .cm-number { color: var(--rg-text-soft); }
-@media (prefers-color-scheme: dark) { :root { --rg-code-keyword: #b9e3f2; --rg-code-string: #9fe0b5; --rg-code-comment: #7389a0; } }
 
 /* ---------- tables ---------- */
 .table-wrapper { overflow-x: auto; border: 1px solid var(--rg-line); border-radius: var(--rg-radius-md); background: var(--rg-surface); }

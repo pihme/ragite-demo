@@ -1,7 +1,7 @@
 // Search page for ragite-demo. Calls the hybrid canned query `search` (metadata.yml) through
 // Datasette's JSON API and renders the rows as cards. No external dependencies.
-// Source chips with counts (one request per source, in parallel), "show more" paging, heading hits
-// without duplicate text, readable relevance, whole-word highlights, links into the demo data.
+// Source chips, "show more" paging, heading hits without duplicate text, readable relevance,
+// whole-word highlights, links into the demo data.
 (function () {
   "use strict";
 
@@ -18,7 +18,6 @@
   const ISSUE_49 = "https://github.com/pihme/ragite/issues/49";
   const FEW = 5;
   const PAGE = 5;
-  const SOURCES = ["", "sqlite-docs", "wikipedia", "ragite-docs"];
   // RRF with k = 60 and 50 candidates per ranking: a passage found by only one ranking scores at most
   // 1/61; one found by both scores at least 2/110. So score > 1/61 means "both rankings found it".
   const ONE_LIST_MAX = 1 / 61;
@@ -179,14 +178,6 @@
     c.checked = true;
   }
 
-  function setCounts(q) {
-    chips.querySelectorAll(".rs-count").forEach((b) => {
-      const rows = cache[q] && cache[q][b.dataset.for];
-      b.textContent = rows ? String(rows.length) : "";
-      b.closest(".rs-chip").classList.toggle("is-zero", !!rows && rows.length === 0);
-    });
-  }
-
   function render(q, coll, ms) {
     const rows = (cache[q] && cache[q][coll]) || [];
     const best = rows.length ? Number(rows[0].score) : 0;
@@ -218,11 +209,9 @@
     empty.hidden = !!q;
     if (!q) {
       status.textContent = "";
-      setCounts("");
       return;
     }
     if (cache[q] && cache[q][coll]) {
-      setCounts(q);
       render(q, coll, null);
       return;
     }
@@ -230,12 +219,8 @@
     const started = performance.now();
     cache[q] = cache[q] || {};
     try {
-      // The selected source first, so the page fills as soon as possible; the counts follow.
       cache[q][coll] = await fetchRows(q, coll);
       render(q, coll, Math.round(performance.now() - started));
-      setCounts(q);
-      await Promise.all(SOURCES.filter((s) => !(s in cache[q])).map(async (s) => { cache[q][s] = await fetchRows(q, s); }));
-      setCounts(q);
     } catch (err) {
       status.textContent = "Search failed: " + err.message;
     }
