@@ -15,13 +15,13 @@ Search the SQLite docs and Wikipedia in your browser with [ragite](https://githu
 
 ![The search page: a question about copying a live database, answered with passages from the SQLite Backup API docs](docs/search.png)
 
-ragite is a SQLite extension for retrieval: it splits documents into chunks, embeds them on the CPU and finds the best passages with a hybrid search (vector similarity plus BM25 full text). This demo indexes about 1.7 MB of freely licensed text and serves it with Datasette, so you get a search page without writing a web app, and the full SQL interface next to it.
+ragite is a SQLite extension for retrieval: it splits documents into chunks, embeds them on the CPU and finds the best passages with a hybrid search (vector similarity plus BM25 full text). This demo indexes about 1.9 MB of freely licensed text and serves it with Datasette, so you get a search page without writing a web app, and the full SQL interface next to it.
 
 ## Requirements
 
 - **Linux x86-64.** ragite publishes release binaries for Linux only so far ([pihme/ragite#35](https://github.com/pihme/ragite/issues/35)). On macOS or Windows, use a Linux container or build ragite yourself.
 - Python 3.10+ whose `sqlite3` module can load extensions (true for most Linux builds; check with `python3 -c "import sqlite3; sqlite3.connect(':memory:').enable_load_extension(True)"`).
-- About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~22 MB.
+- About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~25 MB.
 
 ## Quickstart
 
@@ -86,13 +86,13 @@ SQLite normally runs the search first and then looks up `doc_info` by `doc_id`. 
 
 | Collection | Documents | Cleaned text | License |
 | --- | --- | --- | --- |
-| SQLite documentation 3.54.1 (subset, incl. the `sqlite3` CLI page) | 74 | 1.54 MB | Public domain |
-| Wikipedia: SQLite (en, de), SQL, Relational database, B-tree | 5 | 0.11 MB | CC BY-SA 4.0 |
+| SQLite documentation 3.54.1 (subset, incl. the `sqlite3` CLI page) | 74 | 1.52 MB | Public domain |
+| Wikipedia: SQLite (en, de), SQL, Relational database, B-tree; Retrieval-augmented generation (en, de), Large language model, Information retrieval, Semantic search, Full-text search, Inverted index, Okapi BM25, Tf–idf, Word embedding, Sentence embedding, Cosine similarity, Vector database, Nearest neighbor search, Hierarchical navigable small world | 20 | 0.30 MB | CC BY-SA 4.0 |
 | ragite README, SPEC, GLOSSARY, user guide, tinkering guide | 5 | 0.09 MB | MIT OR Apache-2.0 |
 
-That is 7,844 chunks and a 22 MB `demo.db` (2 KB of vector per chunk). ragite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
+That is 8,751 chunks and a 25 MB `demo.db` (2 KB of vector per chunk). ragite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
 
-`demo.db` is not committed: it is a 22 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`).
+`demo.db` is not committed: it is a 25 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`).
 
 ## Limits
 
