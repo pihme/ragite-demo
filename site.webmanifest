@@ -1,6 +1,6 @@
 {
-  "name": "ragite-demo",
-  "short_name": "ragite-demo",
+  "name": "RAGite demo",
+  "short_name": "RAGite demo",
   "icons": [
     {
       "src": "/ragite-demo/icon-192.png",
