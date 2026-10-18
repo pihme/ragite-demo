@@ -45,6 +45,60 @@ databases:
       docs_vec_vector_chunks00: {hidden: true}
       docs_fts: {hidden: true}
     queries:
+      chunks_with_document:
+        title: Search chunks, joined to their document
+        description: >-
+          Hybrid search on docs_chunks, joined to the docs table (format, full text length) and to
+          doc_info (title, license, revision). start and end are the chunk's position in the document.
+        sql: |-
+          with hits as materialized (
+            select rowid as chunk_id, doc_id, start, "end", chunk, score
+            from docs_chunks
+            where docs_chunks match :q
+            limit 10
+          )
+          select i.title, i.license, i.revision, d.format, length(d.text) as document_length,
+                 hits.start, hits."end", hits.chunk, round(hits.score, 5) as score
+          from hits
+          join docs d on d.doc_id = hits.doc_id
+          join doc_info i on i.doc_id = hits.doc_id
+          order by hits.score desc, hits.chunk_id
+      search_documents:
+        title: Search documents (hybrid)
+        description: One row per document, ranked by its best chunk. collection is optional.
+        sql: |-
+          with hits as materialized (
+            select doc_id, score from docs where docs match :q
+          )
+          select i.title, i.url, i.collection, i.lang, round(hits.score, 5) as score
+          from hits join doc_info i on i.doc_id = hits.doc_id
+          where :collection = '' or i.collection = :collection
+          order by hits.score desc, hits.doc_id
+          limit 10
+      document_chunks:
+        title: All chunks of one document
+        description: Chunks of a document in order, without search (score is null). doc_id comes from doc_info.
+        sql: |-
+          select rowid as chunk_id, doc_id, source, start, "end", heading_path, chunk
+          from docs_chunks
+          where doc_id = :doc_id
+      model:
+        title: Model
+        description: The model built into libragite.so, the model the docs table uses, and the build of this file.
+        sql: |-
+          select m.name, m.technical_id, ragite_table_model('docs') as table_model,
+                 (select value from build_info where key = 'ragite_version') as ragite_version
+          from ragite_default_model() m
+      embed:
+        title: Embed text
+        description: >-
+          ragite_embed with the docs table's model. role is query or passage. Returns a float32 BLOB
+          (4 bytes per dimension); shown here as its size and first bytes.
+        sql: |-
+          select :text as text, :role as role,
+                 length(ragite_embed('docs', :text, :role)) / 4 as dimensions,
+                 hex(substr(ragite_embed('docs', :text, :role), 1, 16)) as first_16_bytes
+          where :text <> ''
       search:
         title: Search passages (hybrid)
         hide_sql: true
@@ -143,57 +197,3 @@ databases:
           from kept k
           order by k.r
           limit 20
-      search_documents:
-        title: Search documents (hybrid)
-        description: One row per document, ranked by its best chunk. collection is optional.
-        sql: |-
-          with hits as materialized (
-            select doc_id, score from docs where docs match :q
-          )
-          select i.title, i.url, i.collection, i.lang, round(hits.score, 5) as score
-          from hits join doc_info i on i.doc_id = hits.doc_id
-          where :collection = '' or i.collection = :collection
-          order by hits.score desc, hits.doc_id
-          limit 10
-      chunks_with_document:
-        title: Search chunks, joined to their document
-        description: >-
-          Hybrid search on docs_chunks, joined to the docs table (format, full text length) and to
-          doc_info (title, license, revision). start and end are the chunk's position in the document.
-        sql: |-
-          with hits as materialized (
-            select rowid as chunk_id, doc_id, start, "end", chunk, score
-            from docs_chunks
-            where docs_chunks match :q
-            limit 10
-          )
-          select i.title, i.license, i.revision, d.format, length(d.text) as document_length,
-                 hits.start, hits."end", hits.chunk, round(hits.score, 5) as score
-          from hits
-          join docs d on d.doc_id = hits.doc_id
-          join doc_info i on i.doc_id = hits.doc_id
-          order by hits.score desc, hits.chunk_id
-      document_chunks:
-        title: All chunks of one document
-        description: Chunks of a document in order, without search (score is null). doc_id comes from doc_info.
-        sql: |-
-          select rowid as chunk_id, doc_id, source, start, "end", heading_path, chunk
-          from docs_chunks
-          where doc_id = :doc_id
-      model:
-        title: Model
-        description: The model built into libragite.so, the model the docs table uses, and the build of this file.
-        sql: |-
-          select m.name, m.technical_id, ragite_table_model('docs') as table_model,
-                 (select value from build_info where key = 'ragite_version') as ragite_version
-          from ragite_default_model() m
-      embed:
-        title: Embed text
-        description: >-
-          ragite_embed with the docs table's model. role is query or passage. Returns a float32 BLOB
-          (4 bytes per dimension); shown here as its size and first bytes.
-        sql: |-
-          select :text as text, :role as role,
-                 length(ragite_embed('docs', :text, :role)) / 4 as dimensions,
-                 hex(substr(ragite_embed('docs', :text, :role), 1, 16)) as first_16_bytes
-          where :text <> ''

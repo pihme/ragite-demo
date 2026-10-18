@@ -57,12 +57,12 @@ Pass the library path **without** `.so`: SQLite adds the suffix itself (see the 
 
 | Query | Ranking | Score |
 | --- | --- | --- |
-| `search` | Hybrid: `docs_chunks MATCH :q`, vector and BM25 fused by Reciprocal Rank Fusion; context for short hits, each passage once (rule below) | RRF score, higher is better (at most 2/61) |
-| `search_documents` | Hybrid, one row per document (`docs MATCH :q`) | RRF score of the best chunk |
 | `chunks_with_document` | Hybrid chunks joined to `docs` and `doc_info`, with positions | RRF score |
+| `search_documents` | Hybrid, one row per document (`docs MATCH :q`) | RRF score of the best chunk |
 | `document_chunks` | All chunks of one `doc_id`, in order (no search) | none |
 | `model` | `ragite_default_model()` and `ragite_table_model('docs')` | none |
 | `embed` | `ragite_embed('docs', :text, :role)`: dimensions and first bytes | none |
+| `search` | Hybrid: `docs_chunks MATCH :q`, vector and BM25 fused by Reciprocal Rank Fusion; context for short hits, each passage once (rule below) | RRF score, higher is better (at most 2/61) |
 
 **Rule for `search`** ([SPEC](SPEC.md) D9): A short hit (under 80 characters, usually a bare heading) gets the next chunks of the same document and section as context: chunks that start after it, whose heading path begins with the hit's heading path, and that have at least 40 characters; at most two, and only until the card holds 200 characters. Cards are then taken in score order from the best 60 hits, at most 20. Each displayed piece (the hit, and each context chunk) is a span of the document; a span counts as already shown when at least half of its length lies inside spans displayed by better cards of the same document. A hit is dropped when its own span is already shown (for example the paragraph under a heading card), when it is a short hit whose context is all shown already (a heading whose paragraph is on screen), or when its text, context included, equals a better card's text after trimming and lower-casing (the same sentence on two pages). Context that is already shown is left out of a kept card. Neighbouring pieces of a split paragraph share only RAGite's short overlap, so both stay. The `spans` column lists the displayed spans.
 
