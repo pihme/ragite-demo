@@ -41,13 +41,28 @@
       {"lang": "de", "title": "SQLite", "revid": 270943976},
       {"lang": "en", "title": "SQL", "revid": 1374625236},
       {"lang": "en", "title": "Relational database", "revid": 1375508962},
-      {"lang": "en", "title": "B-tree", "revid": 1377462701}
+      {"lang": "en", "title": "B-tree", "revid": 1377462701},
+      {"lang": "en", "title": "Retrieval-augmented generation", "revid": 1377227095},
+      {"lang": "de", "title": "Retrieval-Augmented Generation", "revid": 270780895},
+      {"lang": "en", "title": "Large language model", "revid": 1380435450},
+      {"lang": "en", "title": "Information retrieval", "revid": 1375036430},
+      {"lang": "en", "title": "Semantic search", "revid": 1376135669},
+      {"lang": "en", "title": "Full-text search", "revid": 1364195936},
+      {"lang": "en", "title": "Inverted index", "revid": 1354610034},
+      {"lang": "en", "title": "Okapi BM25", "revid": 1372301996},
+      {"lang": "en", "title": "Tf–idf", "revid": 1380707612},
+      {"lang": "en", "title": "Word embedding", "revid": 1374850731},
+      {"lang": "en", "title": "Sentence embedding", "revid": 1380359878},
+      {"lang": "en", "title": "Cosine similarity", "revid": 1378075969},
+      {"lang": "en", "title": "Vector database", "revid": 1374243120},
+      {"lang": "en", "title": "Nearest neighbor search", "revid": 1372424608},
+      {"lang": "en", "title": "Hierarchical navigable small world", "revid": 1369131893}
     ]
   },
   "ragite_docs": {
     "repo": "pihme/ragite",
-    "commit": "ede2d57e16ad82027fb8c968d8828d035455b7b4",
+    "commit": "c1165ead6ffe26d21e0d4d378d0273e1d64e670d",
     "license": "MIT OR Apache-2.0",
-    "files": ["README.md", "SPEC.md", "GLOSSARY.md"]
+    "files": ["README.md", "SPEC.md", "GLOSSARY.md", "docs/guide.md", "docs/tinkering.md"]
   }
 }

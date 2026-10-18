@@ -15,8 +15,8 @@
     if (!nav || nav.querySelector(".rd-brand")) return;
     const brand = document.createElement("a");
     brand.className = "rd-brand"; brand.href = "/";
-    brand.innerHTML = MARK + '<span>ragite<span class="rd-suffix">-demo</span></span>';
-    brand.setAttribute("aria-label", "ragite-demo home");
+    brand.innerHTML = MARK + '<span>RAGite<span class="rd-suffix"> demo</span></span>';
+    brand.setAttribute("aria-label", "RAGite demo home");
     const sep = document.createElement("span"); sep.className = "rd-sep"; sep.setAttribute("aria-hidden", "true");
     nav.prepend(brand, sep);
     const crumbs = nav.querySelector(".crumbs");
@@ -33,7 +33,7 @@
   // Canned query pages use the whole SQL as <title>; use the visible heading instead.
   function title() {
     const h1 = document.querySelector("section.content h1");
-    if (h1 && document.title.length > 80) document.title = h1.textContent.trim() + " · ragite-demo";
+    if (h1 && document.title.length > 80) document.title = h1.textContent.trim() + " · RAGite demo";
   }
 
   // Home: "4 tables, 14 hidden tables" is storage noise from ragite's shadow tables.

@@ -245,8 +245,8 @@ async def test_split_paragraph_pieces_both_stay(ds):
 async def test_source_filter_limit_is_real(ds):
     # Documents the limit the search page warns about (pihme/ragite#49): the filter runs after fusion.
     # When ragite fixes it, this test fails and the hint can go.
-    assert await rows(ds, "search", q="virtual table", collection="ragite-docs") == []
+    assert await rows(ds, "search", q="FTS5", collection="ragite-docs") == []
     resp = await ds.client.get("/demo.json", params={"sql": (
         "SELECT count(*) AS n FROM docs_chunks c JOIN doc_info i ON i.doc_id = c.doc_id "
-        "WHERE i.collection = 'ragite-docs' AND lower(c.chunk) LIKE '%virtual table%'"), "_shape": "array"})
+        "WHERE i.collection = 'ragite-docs' AND lower(c.chunk) LIKE '%fts5%'"), "_shape": "array"})
     assert resp.json()[0]["n"] > 0

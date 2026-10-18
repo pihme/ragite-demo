@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Ask the docs · ragite-demo{% endblock %}
+{% block title %}Ask the docs · RAGite demo{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ urls.path('/static/search.css') }}">
@@ -13,7 +13,7 @@
 <div class="rs" id="ragite-search" data-db="{{ urls.database('demo') }}">
   <div class="rs-hero">
     <h1 class="rs-title">Ask the docs</h1>
-    <p class="rs-lede">Hybrid search over the SQLite documentation, five Wikipedia articles and the ragite docs,
+    <p class="rs-lede">Hybrid search over the SQLite documentation, 20 Wikipedia articles and the RAGite docs,
       all in one SQLite file. The embeddings are computed on the CPU; no external AI service is called.</p>
   </div>
 
@@ -31,7 +31,7 @@
       <label class="rs-chip"><input type="radio" name="collection" value="" checked><span>All sources</span></label>
       <label class="rs-chip"><input type="radio" name="collection" value="sqlite-docs"><span>SQLite docs</span></label>
       <label class="rs-chip"><input type="radio" name="collection" value="wikipedia"><span>Wikipedia</span></label>
-      <label class="rs-chip"><input type="radio" name="collection" value="ragite-docs"><span>ragite docs</span></label>
+      <label class="rs-chip"><input type="radio" name="collection" value="ragite-docs"><span>RAGite docs</span></label>
     </fieldset>
   </form>
 
@@ -47,8 +47,11 @@
       <li><a href="?q=What+is+write-ahead+logging%3F"><span class="rs-ex-src">SQLite docs</span>What is write-ahead logging?</a></li>
       <li><a href="?q=change+the+output+mode+of+the+command+line+shell"><span class="rs-ex-src">SQLite docs</span>Change the output mode of the command-line shell</a></li>
       <li><a href="?q=Who+uses+B-trees+and+why%3F"><span class="rs-ex-src">Wikipedia</span>Who uses B-trees and why?</a></li>
+      <li><a href="?q=What+is+retrieval-augmented+generation%3F"><span class="rs-ex-src">Wikipedia</span>What is retrieval-augmented generation?</a></li>
+      <li><a href="?q=How+does+BM25+rank+documents%3F"><span class="rs-ex-src">Wikipedia</span>How does BM25 rank documents?</a></li>
       <li><a href="?q=Wie+gro%C3%9F+ist+die+SQLite-Bibliothek%3F&amp;collection=wikipedia"><span class="rs-ex-src">Wikipedia · German</span>Wie groß ist die SQLite-Bibliothek?</a></li>
-      <li><a href="?q=How+does+ragite+split+documents+into+chunks%3F"><span class="rs-ex-src">ragite docs</span>How does ragite split documents into chunks?</a></li>
+      <li><a href="?q=How+does+RAGite+split+documents+into+chunks%3F"><span class="rs-ex-src">RAGite docs</span>How does RAGite split documents into chunks?</a></li>
+      <li><a href="?q=How+do+I+add+a+new+document+type%3F"><span class="rs-ex-src">RAGite docs</span>How do I add a new document type?</a></li>
     </ul>
 
     <section class="rs-how" aria-labelledby="rs-how-h">
@@ -61,7 +64,7 @@
         <div class="rs-how-step"><span class="rs-how-ico rs-how-ico--hit" aria-hidden="true"></span><h3>Fused</h3>
           <p>Reciprocal Rank Fusion merges both rankings. A passage that is high in both comes first: that's the hit.</p></div>
       </div>
-      <p class="rs-how-foot">All of it is one query against ragite's <code>docs_chunks</code> table:
+      <p class="rs-how-foot">All of it is one query against RAGite's <code>docs_chunks</code> table:
         <code>WHERE docs_chunks MATCH 'your question'</code>. Every search links to its SQL.</p>
     </section>
   </div>
@@ -70,10 +73,10 @@
 
 {% block footer %}
 <div class="rs-foot">
-  Powered by <a href="https://datasette.io/">Datasette</a> and <a href="https://github.com/pihme/ragite">ragite</a>
+  Powered by <a href="https://datasette.io/">Datasette</a> and <a href="https://github.com/pihme/ragite">RAGite</a>
   · Data license: <a href="https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md">Mixed, see DATA_SOURCES.md</a>
-  (SQLite docs: public domain · Wikipedia: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, authors in each article's history · ragite docs: MIT OR Apache-2.0)
-  · Data source: <a href="https://github.com/pihme/ragite-demo">ragite-demo</a>
+  (SQLite docs: public domain · Wikipedia: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, authors in each article's history · RAGite docs: MIT OR Apache-2.0)
+  · Data source: <a href="https://github.com/pihme/ragite-demo">RAGite demo</a>
   · About: <a href="https://pihme.github.io/ragite-demo/">Project site</a>
 </div>
 {% endblock %}

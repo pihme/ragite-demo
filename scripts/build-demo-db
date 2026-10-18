@@ -291,7 +291,7 @@ def ragite_docs(cfg: dict, cache: Path):
             dest.write_bytes(fetch(url))
         yield {
             "collection": "ragite-docs",
-            "title": f"ragite {name}",
+            "title": f"RAGite {name}",
             "url": f"https://github.com/{cfg['repo']}/blob/{cfg['commit']}/{name}",
             "lang": "en",
             "license": cfg["license"],

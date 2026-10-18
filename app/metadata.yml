@@ -1,8 +1,8 @@
-title: ragite-demo
+title: RAGite demo
 description_html: |-
   <div class="rd-home">
-    <p class="rd-home-lede">Hybrid search over the SQLite documentation, a few Wikipedia articles and the ragite docs,
-    run by the <a href="https://github.com/pihme/ragite">ragite</a> SQLite extension. Everything is in one SQLite file.</p>
+    <p class="rd-home-lede">Hybrid search over the SQLite documentation, a few Wikipedia articles and the RAGite docs,
+    run by the <a href="https://github.com/pihme/ragite">RAGite</a> SQLite extension. Everything is in one SQLite file.</p>
     <form class="rd-home-search" action="/search" method="get" role="search">
       <label class="rd-visually-hidden" for="rd-home-q">Ask the docs</label>
       <input id="rd-home-q" name="q" type="search" placeholder="Ask the docs, e.g. How do I copy a database while it is in use?">
@@ -13,7 +13,7 @@ description_html: |-
   </div>
 license: Mixed, see DATA_SOURCES.md
 license_url: https://github.com/pihme/ragite-demo/blob/main/DATA_SOURCES.md
-source: ragite-demo
+source: RAGite demo
 source_url: https://github.com/pihme/ragite-demo
 about: Project site
 about_url: https://pihme.github.io/ragite-demo/
@@ -25,7 +25,7 @@ databases:
   demo:
     tables:
       docs:
-        description: ragite Document table. Write here; search with WHERE docs MATCH 'question'.
+        description: RAGite Document table. Write here; search with WHERE docs MATCH 'question'.
       docs_chunks:
         description: Read-only companion with one row per chunk. Search with WHERE docs_chunks MATCH 'question'.
       doc_info:
