@@ -15,7 +15,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # A release-please pull request only bumps the version and the changelog; the
+  # code was tested on main. It gets release-pr-check instead. The push to main
+  # after the merge still builds and tests demo.db for the release.
   demo:
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -94,6 +98,20 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+  # Replaces the demo job on release-please--* branches: version.txt, the
+  # manifest and CHANGELOG.md must agree, and nothing else may change.
+  release-pr-check:
+    if: ${{ startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check version and changelog
+        run: scripts/check-release-pr origin/main
+
   # After the demo passed on a push to main, release-please opens or updates the
   # release pull request (version.txt, CHANGELOG.md). Merging that pull request
   # tags ragite-demo/vX.Y.Z, creates the GitHub Release and attaches the demo.db
@@ -117,6 +135,11 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          # A pull request opened with GITHUB_TOKEN gets its CI runs held at
+          # "action_required" until someone approves them. With a RELEASE_TOKEN
+          # secret (fine-grained token: Contents and Pull requests read/write on
+          # this repository) the release pull request runs CI on its own.
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v7
         if: steps.release.outputs.release_created == 'true'
