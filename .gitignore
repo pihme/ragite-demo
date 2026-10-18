@@ -8,7 +8,7 @@
 .env
 .env.*
 !.env.example
-# release.py output
+# Release assets downloaded in CI
 release-out/
 # Build inputs and outputs (rebuilt by scripts/build-demo-db)
 .cache/
