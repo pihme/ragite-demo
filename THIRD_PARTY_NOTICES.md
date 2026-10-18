@@ -12,9 +12,9 @@ Latin subsets in WOFF2 format in `app/static/fonts/`, served by the demo itself 
 | [Geist](https://github.com/vercel/geist-font) (variable, weight 100–900) | 1.800 | `geist.woff2` | Copyright 2024 The Geist Project Authors | [`OFL-geist.txt`](app/static/fonts/OFL-geist.txt) |
 | [Geist Mono](https://github.com/vercel/geist-font) (variable, weight 100–900) | 1.701 | `geist-mono.woff2` | Copyright 2024 The Geist Project Authors | [`OFL-geist-mono.txt`](app/static/fonts/OFL-geist-mono.txt) |
 
-## Data indexed into demo.db (downloaded, not included)
+## Data indexed into demo.db (downloaded, not in the repository)
 
-See [DATA_SOURCES.md](DATA_SOURCES.md) for the exact sources, revisions, changes and attribution.
+The `demo.db` attached to each GitHub Release contains this data; `DATA_SOURCES.md` is attached next to it. See [DATA_SOURCES.md](DATA_SOURCES.md) for the exact sources, revisions, changes and attribution.
 
 | Data | License |
 | --- | --- |

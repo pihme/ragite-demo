@@ -8,6 +8,7 @@
 Search the SQLite docs and Wikipedia in your browser with [RAGite](https://github.com/pihme/ragite) and [Datasette](https://datasette.io/), offline and in one SQLite file.
 
 [![ci](https://img.shields.io/github/actions/workflow/status/pihme/ragite-demo/ci.yml?branch=main&label=ci&style=flat-square)](https://github.com/pihme/ragite-demo/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/pihme/ragite-demo?display_name=release&label=release&style=flat-square)](https://github.com/pihme/ragite-demo/releases/latest)
 [![license](https://img.shields.io/badge/license-MIT-5c7a2e?style=flat-square)](LICENSE)
 [![RAGite](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fpihme%2Fragite-demo%2Fmain%2Fdata%2Fsources.json&query=%24.ragite.version&prefix=v&label=RAGite&color=2b6f8a&style=flat-square)](data/sources.json)
 
@@ -92,7 +93,7 @@ SQLite normally runs the search first and then looks up `doc_info` by `doc_id`. 
 
 That is 8,751 chunks and a 25 MB `demo.db` (2 KB of vector per chunk). RAGite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
 
-`demo.db` is not committed: it is a 25 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`).
+`demo.db` is not committed: it is a 25 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`), and every [release](https://github.com/pihme/ragite-demo/releases) attaches the `demo.db` it was tested with, next to `DATA_SOURCES.md` for attribution. To search it you still need `libragite.so` from the RAGite version in `data/sources.json`.
 
 ## Limits
 

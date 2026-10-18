@@ -11,6 +11,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
+  # A push to main may cut a release. Do not cancel that run.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -73,3 +74,55 @@ jobs:
       - name: Datasette log
         if: always()
         run: cat datasette.log || true
+
+  # After the demo passed on a push to main, release-please opens or updates the
+  # release pull request (version.txt, CHANGELOG.md). Merging that pull request
+  # tags ragite-demo/vX.Y.Z, creates the GitHub Release and attaches the demo.db
+  # built and tested in this run.
+  release:
+    needs: demo
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner == 'pihme'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    concurrency:
+      group: release-please-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Open the release pull request or cut the release
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - uses: actions/checkout@v7
+        if: steps.release.outputs.release_created == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Download the tested demo.db
+        if: steps.release.outputs.release_created == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: demo-db
+          path: release-out
+
+      - name: Attach demo.db and the license files
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          test -s release-out/app/demo.db
+          test -s release-out/DATA_SOURCES.md
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "ragite-demo $VERSION"
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber \
+            release-out/app/demo.db \
+            release-out/DATA_SOURCES.md \
+            LICENSE \
+            THIRD_PARTY_NOTICES.md

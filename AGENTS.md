@@ -22,7 +22,7 @@ Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.6
 Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed data, with attribution in `DATA_SOURCES.md` and `doc_info`; no CDN or external service at run time; use only ragite's public SQL interface (hybrid `MATCH` on `docs` and `docs_chunks`, never its storage tables, SPEC D2); heavy work runs in CI.
 
 - Tests: `make test` must pass before anything lands on `main`. Tests stay offline: no real accounts, tokens or live services.
-- No releases yet: there is no release workflow and no version file. CI uploads `demo.db` as an artifact.
+- Releases: release-please (`release-please-config.json`, `.release-please-manifest.json`, version file `version.txt`, `CHANGELOG.md`). CI uploads `demo.db` as an artifact on every run; each release also attaches it.
 
 ## Shared rules
 
@@ -33,11 +33,14 @@ Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed da
 - **Non-trivial findings become GitHub issues** (with the matching issue form): bugs you do not fix right away, design questions, anything that needs a decision. Do not hide them in a commit.
 - **Never force-push**, never rewrite pushed history, never delete branches or tags.
 - **No comments, reviews, label changes, closes or merges on other people's issues and PRs** unless the maintainer asked for it in the session. Exception: Dependabot PRs (see below). Opening issues for your own findings and closing them with your own commits (`Closes #n`) is fine.
-- **Never write the skip-CI token** (the word `skip` and `ci` in square brackets, or any of its variants) in a commit message, not even quoted or explained: GitHub then skips CI for that push and no release is cut. Only `release.py` puts it in its own release commits.
+- **Never write the skip-CI token** (the word `skip` and `ci` in square brackets, or any of its variants) in a commit message, not even quoted or explained: GitHub then skips CI for that push and no release is cut. No tool in this repo needs it: release-please commits through its release pull request.
 
 ### Versions and releases
 
-- No releases for now (no release workflow). If releases are added later, follow the presets rules: SemVer, tag `ragite-demo/vX.Y.Z`, cut only by `.github/scripts/release.py` after green CI; never tag or create releases by hand.
+- **Releases use release-please, not `release.py`** (the Python counterpart of RAGite's release-plz setup). There is no `.github/release.json`. After CI passes on a push to `main`, the `release` job opens or updates a release pull request that bumps `version.txt` and `.release-please-manifest.json` and adds the new section to `CHANGELOG.md`. Merging that pull request tags `ragite-demo/vX.Y.Z`, creates the GitHub Release named `ragite-demo X.Y.Z` and attaches the `demo.db` built and tested in that run, `DATA_SOURCES.md`, `LICENSE` and `THIRD_PARTY_NOTICES.md`.
+- `feat:` bumps minor, `fix:`/`perf:` patch. **Before 1.0.0 a breaking change (`!` or a `BREAKING CHANGE:` footer) bumps the minor version**, never to 1.0.0. `docs:`, `test:`, `refactor:`, `chore:`, `ci:`, `build:` never bump and stay out of the changelog. Commit titles become the changelog lines verbatim.
+- **Choose a version** (e.g. 1.0, only when the maintainer decided it): an empty commit with the footer `Release-As: 1.0.0`, e.g. `git commit --allow-empty -m "chore: release 1.0" -m "Release-As: 1.0.0"`.
+- Never tag, bump `version.txt` or create releases by hand, and never edit published release notes or past `CHANGELOG.md` sections.
 
 ### Dependabot
 
