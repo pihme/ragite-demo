@@ -36,7 +36,7 @@ def main() -> None:
             if cards == 0:
                 sys.exit(f"{path}: no result cards")
         check_page_helpers(page)
-        check_filter_hint(page, base, out)
+        check_source_filter(page, base, out)
         check_odd_collection(page, base)
         browser.close()
 
@@ -57,9 +57,6 @@ HELPER_CASES = [
      '<div class="rs-card-context" title="The text that follows this passage in the document">'
      '<p class="rs-card-text">The <mark>VACUUM</mark> &lt;command&gt;</p></div>'),
     ("contextHtml", ["[]", "vacuum"], ""),
-    # The source-filter hint (pihme/ragite#49): none without a filter, a warning when few rows remain.
-    ("filterHintHtml", ["", 0], ""),
-    ("filterHintHtml", ["ragite-docs", 0], None),
     # A NUL byte (or another control character) in the query becomes a space.
     ("cleanQuery", ["WAL\u0000mode\u0007 "], "WAL mode"),
 ]
@@ -68,24 +65,19 @@ HELPER_CASES = [
 def check_page_helpers(page) -> None:
     for fn, args, want in HELPER_CASES:
         got = page.evaluate(f"(args) => window.ragiteSearch.{fn}(...args)", args)
-        if want is None:  # only the gist is checked
-            if "No passages" not in got or "ragite/issues/49" not in got:
-                sys.exit(f"{fn}{tuple(args)!r}: unexpected {got!r}")
-            continue
         if got != want:
             sys.exit(f"{fn}{tuple(args)!r}: expected {want!r}, got {got!r}")
     print(f"page helpers: {len(HELPER_CASES)} checks ok")
 
 
-def check_filter_hint(page, base: str, out: Path) -> None:
-    """'FTS5' limited to the ragite docs returns no rows (pihme/ragite#49); the page must say why."""
+def check_source_filter(page, base: str, out: Path) -> None:
+    """'FTS5' limited to the RAGite docs returns cards (fixed in RAGite 0.3.2), with no filter-limit hint."""
     page.goto(base + "/search?q=FTS5&collection=ragite-docs")
-    page.wait_for_selector("#rs-filter-hint:not([hidden])", timeout=30_000)
-    hint = page.inner_text("#rs-filter-hint")
-    page.screenshot(path=str(out / "search-filter-hint.png"), full_page=False)
-    if "ragite#49" not in hint:
-        sys.exit(f"source filter hint missing: {hint!r}")
-    print("filter hint: ok")
+    page.wait_for_selector(".rs-card", timeout=30_000)
+    page.screenshot(path=str(out / "search-source-filter.png"), full_page=False)
+    if page.query_selector("#rs-filter-hint") is not None:
+        sys.exit("source filter hint is still on the page")
+    print(f"source filter: {len(page.query_selector_all('.rs-card'))} cards ok")
 
 
 def check_odd_collection(page, base: str) -> None:

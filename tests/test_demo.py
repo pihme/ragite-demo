@@ -150,7 +150,7 @@ async def test_search_page_and_assets(ds):
     assert page.status_code == 200
     assert 'id="rs-q"' in page.text and "/static/search.js" in page.text
     assert 'name="mode"' not in page.text
-    assert 'id="rs-filter-hint"' in page.text
+    assert 'id="rs-filter-hint"' not in page.text  # the ragite#49 hint is gone (RAGite 0.3.2)
     for asset in ("search.js", "search.css"):
         assert (await ds.client.get(f"/static/{asset}")).status_code == 200
     # The source filter is a set of radio chips with the same parameter name and values (SPEC D10).
@@ -215,7 +215,7 @@ async def test_model_and_embed(ds):
 @pytest.mark.asyncio
 async def test_few_near_empty_chunks(ds):
     # The cleaning joins table rows and short lists (scripts/build-demo-db), so near-empty Chunks
-    # are mostly headings, which ragite keeps as their own Chunks. Before the joining: 23 %.
+    # are mostly headings, which RAGite keeps as their own Chunks. Before the joining: 23 %.
     resp = await ds.client.get("/demo.json", params={
         "sql": "SELECT count(*) AS n, sum(length(chunk) < 30) AS short FROM docs_chunks", "_shape": "array"})
     assert resp.status_code == 200, resp.text
@@ -279,7 +279,7 @@ async def test_at_most_two_context_chunks(ds, q):
 
 @pytest.mark.asyncio
 async def test_split_paragraph_pieces_both_stay(ds):
-    # A long paragraph is cut into pieces that share a short overlap (ragite REQ-70). The overlap alone
+    # A long paragraph is cut into pieces that share a short overlap (RAGite REQ-70). The overlap alone
     # must not drop the neighbouring piece: "Window functions come in two varieties" is the best answer.
     found = await rows(ds, "search", q="window functions")
     piece = next((r for r in found if r["chunk"].startswith("Window functions come in two varieties")), None)
@@ -289,11 +289,9 @@ async def test_split_paragraph_pieces_both_stay(ds):
     assert neighbours, "expected an overlapping piece of the same paragraph in the results too"
 
 @pytest.mark.asyncio
-async def test_source_filter_limit_is_real(ds):
-    # Documents the limit the search page warns about (pihme/ragite#49): the filter runs after fusion.
-    # When ragite fixes it, this test fails and the hint can go.
-    assert await rows(ds, "search", q="FTS5", collection="ragite-docs") == []
-    resp = await ds.client.get("/demo.json", params={"sql": (
-        "SELECT count(*) AS n FROM docs_chunks c JOIN doc_info i ON i.doc_id = c.doc_id "
-        "WHERE i.collection = 'ragite-docs' AND lower(c.chunk) LIKE '%fts5%'"), "_shape": "array"})
-    assert resp.json()[0]["n"] > 0
+async def test_source_filter_reaches_past_fusion_depth(ds):
+    # RAGite 0.3.2 applies = and IN before the fusion depth: a source that ranks lower overall still
+    # returns its matching passages. Before the fix, FTS5 limited to ragite-docs returned no rows.
+    found = await rows(ds, "search", q="FTS5", collection="ragite-docs")
+    assert found, "expected rows from ragite-docs"
+    assert {r["collection"] for r in found} == {"ragite-docs"}
