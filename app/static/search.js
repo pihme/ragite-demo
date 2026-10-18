@@ -14,9 +14,6 @@
   const results = document.getElementById("rs-results");
   const more = document.getElementById("rs-more");
   const empty = document.getElementById("rs-empty");
-  const filterHint = document.getElementById("rs-filter-hint");
-  const ISSUE_49 = "https://github.com/pihme/ragite/issues/49";
-  const FEW = 5;
   const PAGE = 5;
   // RRF with k = 60 and 50 candidates per ranking: a passage found by only one ranking scores at most
   // 1/61; one found by both scores at least 2/110. So score > 1/61 means "both rankings found it".
@@ -87,21 +84,6 @@
     if (!ctx.length) return "";
     return '<div class="rs-card-context" title="The text that follows this passage in the document">' +
       ctx.map((t) => '<p class="rs-card-text">' + highlight(String(t), q) + "</p>").join("") + "</div>";
-  }
-
-  // ragite fuses a fixed number of candidates over all sources first; the source filter only sees
-  // those (pihme/ragite#49). Say so whenever a filter is active, louder when it leaves few rows.
-  function filterHintHtml(coll, count) {
-    if (!coll) return "";
-    const name = escapeHtml(COLLECTION_LABEL[coll] || coll);
-    const link = '<a href="' + ISSUE_49 + '">ragite#49</a>';
-    if (count < FEW) {
-      return "<strong>" + (count ? "Only " + count + (count === 1 ? " passage" : " passages") : "No passages") +
-        " from " + name + " made it into RAGite's top candidates.</strong> More may match: the source filter is applied " +
-        "after RAGite has picked its best candidates from all sources. Search all sources, or rephrase the question (" + link + ").";
-    }
-    return "Filtered to " + name + ": RAGite picks its best candidates from all sources first, so passages that rank lower " +
-      "overall are not shown here (" + link + ").";
   }
 
   const norm = (s) => String(s || "").trim().toLowerCase().replace(/[\s:.]+$/, "");
@@ -191,8 +173,6 @@
       ? escapeHtml(rows.length + " passage" + (rows.length === 1 ? "" : "s") + (ms != null ? " · " + ms + " ms" : "")) +
         ' · <a href="' + escapeHtml(page) + '">Show this search as SQL</a>'
       : "No passages found.";
-    filterHint.innerHTML = filterHintHtml(coll, rows.length);
-    filterHint.hidden = !coll;
   }
 
   async function run(pushState) {
@@ -205,7 +185,6 @@
     shown = PAGE;
     results.innerHTML = "";
     more.hidden = true;
-    filterHint.hidden = true;
     empty.hidden = !!q;
     if (!q) {
       status.textContent = "";
@@ -234,7 +213,7 @@
   }
 
   // Exposed for the browser checks in tests/screenshot.py.
-  window.ragiteSearch = { highlight: highlight, cleanQuery: cleanQuery, contextHtml: contextHtml, filterHintHtml: filterHintHtml };
+  window.ragiteSearch = { highlight: highlight, cleanQuery: cleanQuery, contextHtml: contextHtml };
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();

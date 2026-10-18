@@ -37,7 +37,7 @@ databases:
       docs_documents: {hidden: true}
       docs_chunk_rows: {hidden: true}
       docs_model: {hidden: true}
-      # Storage tables ragite creates; hidden from the table list only, never queried.
+      # Storage tables RAGite creates; hidden from the table list only, never queried.
       docs_vec: {hidden: true}
       docs_vec_chunks: {hidden: true}
       docs_vec_info: {hidden: true}
@@ -69,10 +69,10 @@ databases:
         sql: |-
           with hits as materialized (
             select doc_id, score from docs where docs match :q
+              and doc_id in (select doc_id from doc_info where :collection = '' or collection = :collection)
           )
           select i.title, i.url, i.collection, i.lang, round(hits.score, 5) as score
           from hits join doc_info i on i.doc_id = hits.doc_id
-          where :collection = '' or i.collection = :collection
           order by hits.score desc, hits.doc_id
           limit 10
       document_chunks:
@@ -87,7 +87,7 @@ databases:
         write: true
         params: [text, source, format]
         description: >-
-          Inserts one document into the notes table; ragite chunks and embeds it on insert. Run "Create table"
+          Inserts one document into the notes table; RAGite chunks and embeds it on insert. Run "Create table"
           first. format is text/plain (default when empty), text/markdown, text/html or
           application/vnd.docling.document+json. Repeatable: a source that is already in notes is skipped.
           Look at the result with SELECT * FROM notes_chunks or WHERE notes MATCH 'question'. This changes your
@@ -100,7 +100,7 @@ databases:
         title: Create table (writes to demo.db)
         write: true
         description: >-
-          Creates the ragite Document table notes (with its companion notes_chunks) with the build's default
+          Creates the RAGite Document table notes (with its companion notes_chunks) with the build's default
           model. Run this before "Insert document". Repeatable: does nothing when notes exists. This changes your
           local demo.db; re-download it from the release or rebuild it to get the original back.
         sql: CREATE VIRTUAL TABLE IF NOT EXISTS notes USING ragite
@@ -140,12 +140,12 @@ databases:
             select rowid as chunk_id, doc_id, start, "end", chunk, heading_path, score
             from docs_chunks
             where docs_chunks match :q
+              and doc_id in (select doc_id from doc_info where :collection = '' or collection = :collection)
           ),
           ranked as materialized (
             select hits.*, i.title, i.url, i.collection,
                    row_number() over (order by hits.score desc, hits.chunk_id) as r
             from hits join doc_info i on i.doc_id = hits.doc_id
-            where :collection = '' or i.collection = :collection
           ),
           top as materialized (
             select * from ranked where r <= 60

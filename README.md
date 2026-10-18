@@ -20,7 +20,7 @@ RAGite is a SQLite extension for retrieval: it splits documents into chunks, emb
 
 ## Requirements
 
-- **Linux x86-64.** RAGite publishes release binaries for Linux only so far ([pihme/ragite#35](https://github.com/pihme/ragite/issues/35)). On macOS or Windows, use a Linux container or build RAGite yourself.
+- **Linux x86-64.** RAGite publishes release binaries for Linux only so far (release 0.3.3 ships only `libragite.so` for Linux x86-64). On macOS or Windows, use a Linux container or build RAGite yourself.
 - Python 3.10+ whose `sqlite3` module can load extensions (true for most Linux builds; check with `python3 -c "import sqlite3; sqlite3.connect(':memory:').enable_load_extension(True)"`).
 - About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~25 MB.
 
@@ -32,7 +32,7 @@ cd ragite-demo
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 
-# Downloads libragite.so (ragite v0.3.0) and the pinned sources, checks them, builds app/demo.db.
+# Downloads libragite.so (RAGite v0.3.3) and the pinned sources, checks them, builds app/demo.db.
 scripts/build-demo-db
 
 # The demo with the search page: http://127.0.0.1:8001/search
@@ -72,7 +72,6 @@ Pass the library path **without** `.so`: SQLite adds the suffix itself (see the 
 
 All of them use only RAGite's public interface: the Document table, its `_chunks` companion and the `ragite_*` functions. `collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
 
-**Known limit of the source filter** ([pihme/ragite#49](https://github.com/pihme/ragite/issues/49)): RAGite takes a fixed number of best candidates from all sources, fuses them, and only then does the query keep the rows of the chosen source. A source that ranks lower overall can come back with few or no passages even though it has matching text; for example `FTS5` limited to `ragite-docs` returns nothing, although 11 ragite-docs chunks contain that word. The search page says so whenever a source filter is active. Searching all sources, or rephrasing, helps until RAGite lets filters reach past the candidate depth.
 
 **More SQL**: [examples/](examples/) has runnable `.sql` files for every part of RAGite's public interface: create a table, insert each format, update and delete, search documents and chunks, join a chunk to its document, show the model, embed text.
 

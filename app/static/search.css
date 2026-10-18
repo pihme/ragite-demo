@@ -27,12 +27,9 @@
 .rs-chip:has(input:checked) { background: var(--rg-accent); border-color: var(--rg-accent); color: var(--rg-on-accent); }
 .rs-chip:has(input:focus-visible) { outline: 2px solid var(--rg-focus); outline-offset: 2px; }
 
-/* status and hint */
+/* status */
 .rs-status { color: var(--rg-muted); font: 400 .85rem var(--rg-font-mono); min-height: 1.4em; margin: 1.25rem 0 .75rem; }
 .rs-status a { color: var(--rg-muted); }
-.rs-hint { margin: 0 0 1rem; padding: .75rem 1rem; border-radius: var(--rg-radius-md); background: var(--rg-surface);
-  border: 1px solid var(--rg-line); border-left: 3px solid var(--rg-accent); color: var(--rg-text-soft); font-size: .92rem; }
-.rs-hint strong { color: var(--rg-text); }
 
 /* result cards */
 .rs-results { list-style: none; padding: 0; margin: 0; display: grid; gap: .8rem; }
