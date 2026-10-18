@@ -110,7 +110,7 @@ scripts/run-examples         # the SQL examples through the sqlite3 shell
 make serve & make smoke      # the same searches over HTTP
 ```
 
-CI builds `demo.db`, runs the tests and every SQL example, queries a running `datasette serve` with `curl`, and uploads screenshots of the search page (artifact `screenshots`).
+CI builds `demo.db`, runs the tests and every SQL example, queries a running `datasette serve` with `curl`, and uploads screenshots of the search page (artifact `screenshots`). When the `SONAR_TOKEN` secret is set, the same job sends the build script's test coverage and a code analysis to [SonarQube Cloud](https://sonarcloud.io/project/overview?id=pihme_ragite-demo).
 
 ## Contributing
 
