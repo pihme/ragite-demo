@@ -22,7 +22,7 @@
   // 1/61; one found by both scores at least 2/110. So score > 1/61 means "both rankings found it".
   const ONE_LIST_MAX = 1 / 61;
 
-  const COLLECTION_LABEL = { "sqlite-docs": "SQLite docs", wikipedia: "Wikipedia", "ragite-docs": "ragite docs" };
+  const COLLECTION_LABEL = { "sqlite-docs": "SQLite docs", wikipedia: "Wikipedia", "ragite-docs": "RAGite docs" };
 
   let cache = {};   // q -> { coll -> rows }
   let shown = PAGE;
@@ -97,10 +97,10 @@
     const link = '<a href="' + ISSUE_49 + '">ragite#49</a>';
     if (count < FEW) {
       return "<strong>" + (count ? "Only " + count + (count === 1 ? " passage" : " passages") : "No passages") +
-        " from " + name + " made it into ragite's top candidates.</strong> More may match: the source filter is applied " +
-        "after ragite has picked its best candidates from all sources. Search all sources, or rephrase the question (" + link + ").";
+        " from " + name + " made it into RAGite's top candidates.</strong> More may match: the source filter is applied " +
+        "after RAGite has picked its best candidates from all sources. Search all sources, or rephrase the question (" + link + ").";
     }
-    return "Filtered to " + name + ": ragite picks its best candidates from all sources first, so passages that rank lower " +
+    return "Filtered to " + name + ": RAGite picks its best candidates from all sources first, so passages that rank lower " +
       "overall are not shown here (" + link + ").";
   }
 
