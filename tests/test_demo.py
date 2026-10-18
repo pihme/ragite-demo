@@ -88,7 +88,7 @@ async def test_empty_query_returns_nothing(ds):
 
 @pytest.mark.asyncio
 async def test_only_hybrid_queries_are_offered(ds):
-    # The demo uses ragite's public interface only: docs, docs_chunks and the ragite_* functions.
+    # The demo uses RAGite's public interface only: docs, docs_chunks and the ragite_* functions.
     queries = (await ds.client.get("/demo.json")).json()["queries"]
     assert [q["name"] for q in queries] == [
         "chunks_with_document", "search_documents", "document_chunks", "insert_document", "create_table",

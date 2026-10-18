@@ -26,7 +26,7 @@ The `demo.db` attached to each GitHub Release contains this data; `DATA_SOURCES.
 
 | Name | Version | License | Used for |
 | --- | --- | --- | --- |
-| [RAGite](https://github.com/pihme/ragite) `libragite.so` | 0.3.3 | MIT OR Apache-2.0 | SQLite extension that chunks, embeds and searches. Downloaded from the GitHub release and checked by SHA-256. It bundles SQLite, sqlite-vec, the potion-retrieval-32M model (MIT) and other components; their notices are in the release's [THIRD_PARTY_NOTICES.md](https://github.com/pihme/ragite/releases/download/ragite/v0.3.3/THIRD_PARTY_NOTICES.md). |
+| [RAGite](https://github.com/pihme/ragite) `libragite.so` | 1.0.0 | MIT OR Apache-2.0 | SQLite extension that chunks, embeds and searches. Downloaded from the GitHub release and checked by SHA-256. It bundles SQLite, sqlite-vec, the potion-retrieval-32M model (MIT) and other components; their notices are in the release's [THIRD_PARTY_NOTICES.md](https://github.com/pihme/ragite/releases/download/ragite/v1.0.0/THIRD_PARTY_NOTICES.md). |
 | [Datasette](https://datasette.io/) | 0.65.5 | Apache-2.0 | Web interface and JSON API (`requirements.txt`). |
 | [Python](https://www.python.org/) | 3.10+ | PSF-2.0 | Build script (standard library only) and tests. |
 

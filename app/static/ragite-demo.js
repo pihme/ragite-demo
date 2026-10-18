@@ -36,7 +36,7 @@
     if (h1 && document.title.length > 80) document.title = h1.textContent.trim() + " · RAGite demo";
   }
 
-  // Home: "4 tables, 14 hidden tables" is storage noise from ragite's shadow tables.
+  // Home: "4 tables, 14 hidden tables" is storage noise from RAGite's shadow tables.
   function homeCounts() {
     if (!document.body.classList.contains("index")) return;
     document.querySelectorAll("section.content > p").forEach((p) => {
