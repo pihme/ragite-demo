@@ -4,14 +4,14 @@ This file is for the coding agent working in this repo. Read it at the start of 
 
 ## What this repo is
 
-**ragite-demo** is a Datasette demo for the ragite SQLite extension: it indexes the SQLite docs, a few Wikipedia articles and the ragite docs into one SQLite file and offers a search page plus canned SQL queries. Spec and decisions: `SPEC.md`. User docs: `README.md`.
+**ragite-demo** is a Datasette demo for the RAGite SQLite extension: it indexes the SQLite docs, a few Wikipedia articles and the RAGite docs into one SQLite file and offers a search page plus canned SQL queries. Spec and decisions: `SPEC.md`. User docs: `README.md`.
 
 License: **MIT** (`LICENSE`). Copyright line: "ragite-demo contributors"; keep it that way.
 MIT because it is an example for an open library: people copy demo code. The indexed data keeps its own licenses (`DATA_SOURCES.md`).
 
 ## How to work here
 
-Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.65.5, ragite release `libragite.so` (Linux x86-64).
+Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.65.5, RAGite release `libragite.so` (Linux x86-64).
 
 - `data/sources.json`: every input, pinned (RAGite release and model by SHA-256 and id, SQLite doc archive by SHA-256, Wikipedia by revision id, RAGite docs by commit).
 - `scripts/build-demo-db`: downloads, cleans HTML, builds `app/demo.db` (tables `docs` via RAGite, `doc_info`, `build_info`). `scripts/smoke`: HTTP checks against a running server.

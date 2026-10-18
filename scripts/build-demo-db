@@ -2,8 +2,8 @@
 """Build demo.db: download pinned sources, clean them, and index them with ragite.
 
 Only the Python standard library is used. Every input is pinned in data/sources.json:
-the ragite release binary and the SQLite documentation archive by SHA-256, the Wikipedia
-articles by revision id, and the ragite docs by commit.
+the RAGite release binary and the SQLite documentation archive by SHA-256, the Wikipedia
+articles by revision id, and the RAGite docs by commit.
 
     scripts/build-demo-db                     # downloads the release libragite.so to ./libragite.so
     scripts/build-demo-db --lib ./libragite.so --out app/demo.db
@@ -55,7 +55,7 @@ WIKI_STOP_HEADINGS = {
 
 
 class Cleaner(HTMLParser):
-    """Re-serialise HTML with only the text-bearing structure ragite chunks well."""
+    """Re-serialise HTML with only the text-bearing structure RAGite chunks well."""
 
     def __init__(self, stop_headings: set[str] | None = None) -> None:
         super().__init__(convert_charrefs=True)
@@ -135,7 +135,7 @@ class Cleaner(HTMLParser):
         return text.strip()
 
 
-# No-break and other Unicode spaces become plain spaces, so ragite collapses them with the rest
+# No-break and other Unicode spaces become plain spaces, so RAGite collapses them with the rest
 # (it collapses ASCII whitespace only, as HTML does) and a heading like "\u00a0WAL Mode\u00a0" stays clean.
 UNICODE_SPACES = re.compile("[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]")
 # Cleaned HTML has bare tags only (no attributes), so these patterns see the whole structure.
@@ -154,7 +154,7 @@ def _visible(fragment: str) -> str:
 def join_table_rows(text: str) -> str:
     """One paragraph per table row, cells joined by " | ".
 
-    ragite makes every td and th its own Chunk (ragite SPEC REQ-55), so a table of short cells
+    RAGite makes every td and th its own Chunk (RAGite SPEC REQ-55), so a table of short cells
     becomes many near-empty Chunks ("pgno", ".mode box") that match a query word and rank first.
     A row keeps its cells together: ".mode box | Show the current output mode". Rows whose cells
     hold block elements are left alone."""
@@ -173,7 +173,7 @@ def join_table_rows(text: str) -> str:
 def join_short_lists(text: str) -> str:
     """A list whose items are all short and plain becomes one paragraph, items joined by "; ".
 
-    ragite makes every li its own Chunk (REQ-55); feature lists and link lists would otherwise
+    RAGite makes every li its own Chunk (REQ-55); feature lists and link lists would otherwise
     become one-word Chunks. Lists with a long item or a nested block stay as they are."""
 
     def lst(m: re.Match) -> str:
