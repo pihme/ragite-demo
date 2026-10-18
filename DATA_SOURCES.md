@@ -41,15 +41,15 @@ Text from Wikipedia, the free encyclopedia, licensed under the [Creative Commons
 | Hierarchical navigable small world | en | [1369131893](https://en.wikipedia.org/w/index.php?title=Hierarchical_navigable_small_world&oldid=1369131893) | [history](https://en.wikipedia.org/w/index.php?title=Hierarchical_navigable_small_world&action=history) |
 
 - Retrieved through the MediaWiki API (`action=parse&oldid=<revision>`), so the text is the pinned revision. Templates are expanded by Wikipedia at download time, so the rendered markup may drift slightly when a template changes later.
-- Changes: infoboxes, images, math formulas, navigation boxes, edit links, footnote markers and the sections that only hold links or citations (for example "See also", "References", "External links"; "Weblinks", "Einzelnachweise" in German) are removed. Table rows and lists of short items are joined into paragraphs and no-break spaces become plain spaces, as for the SQLite documentation. The remaining text is unchanged and is split into chunks by ragite. These changes are an adaptation under CC BY-SA 4.0; the adapted text in `demo.db` is under the same license.
+- Changes: infoboxes, images, math formulas, navigation boxes, edit links, footnote markers and the sections that only hold links or citations (for example "See also", "References", "External links"; "Weblinks", "Einzelnachweise" in German) are removed. Table rows and lists of short items are joined into paragraphs and no-break spaces become plain spaces, as for the SQLite documentation. The remaining text is unchanged and is split into chunks by RAGite. These changes are an adaptation under CC BY-SA 4.0; the adapted text in `demo.db` is under the same license.
 - Images are not included.
 
-## 3. ragite documentation (MIT OR Apache-2.0)
+## 3. RAGite documentation (MIT OR Apache-2.0)
 
-- Files: `README.md`, `SPEC.md`, `GLOSSARY.md`, the user guide `docs/guide.md` and the tinkering guide `docs/tinkering.md` from [pihme/ragite](https://github.com/pihme/ragite) at commit [`c1165ea`](https://github.com/pihme/ragite/tree/c1165ead6ffe26d21e0d4d378d0273e1d64e670d). The commit is newer than the ragite 0.3.0 release the demo runs; the changes since that release touch only docs, tests and CI, so the files describe the release's behaviour.
+- Files: `README.md`, `SPEC.md`, `GLOSSARY.md`, the user guide `docs/guide.md` and the tinkering guide `docs/tinkering.md` from [pihme/ragite](https://github.com/pihme/ragite) at commit [`c1165ea`](https://github.com/pihme/ragite/tree/c1165ead6ffe26d21e0d4d378d0273e1d64e670d). The commit is newer than the RAGite 0.3.0 release the demo runs; the changes since that release touch only docs, tests and CI, so the files describe the release's behaviour.
 - License: `MIT OR Apache-2.0`, Copyright (c) 2026 ragite contributors ([LICENSE-MIT](https://github.com/pihme/ragite/blob/c1165ead6ffe26d21e0d4d378d0273e1d64e670d/LICENSE-MIT), [LICENSE-APACHE](https://github.com/pihme/ragite/blob/c1165ead6ffe26d21e0d4d378d0273e1d64e670d/LICENSE-APACHE)).
 - Changes: none; indexed as Markdown.
 
 ## Not included
 
-The benchmark datasets used by ragite (SciFact, FiQA and others) are not part of this demo: SciFact is licensed for noncommercial use only, and FiQA's license is unclear.
+The benchmark datasets used by RAGite (SciFact, FiQA and others) are not part of this demo: SciFact is licensed for noncommercial use only, and FiQA's license is unclear.
