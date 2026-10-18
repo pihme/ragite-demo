@@ -20,7 +20,7 @@ See [DATA_SOURCES.md](DATA_SOURCES.md) for the exact sources, revisions, changes
 | --- | --- |
 | SQLite documentation 3.54.1 (subset) | Public domain |
 | Wikipedia articles (20, pinned revisions) | CC BY-SA 4.0 |
-| ragite README, SPEC, GLOSSARY, user guide, tinkering guide | MIT OR Apache-2.0 |
+| RAGite README, SPEC, GLOSSARY, user guide, tinkering guide | MIT OR Apache-2.0 |
 
 ## Programs used (run, not included)
 
