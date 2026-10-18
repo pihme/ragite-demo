@@ -67,7 +67,7 @@ Pass the library path **without** `.so`: SQLite adds the suffix itself (see the 
 
 All of them use only ragite's public interface: the Document table, its `_chunks` companion and the `ragite_*` functions. `collection` is empty for all sources, or one of `sqlite-docs`, `wikipedia`, `ragite-docs`.
 
-**Known limit of the source filter** ([pihme/ragite#49](https://github.com/pihme/ragite/issues/49)): ragite takes a fixed number of best candidates from all sources, fuses them, and only then does the query keep the rows of the chosen source. A source that ranks lower overall can come back with few or no passages even though it has matching text; for example `virtual table` limited to `ragite-docs` returns nothing, although 18 ragite-docs chunks contain that phrase. The search page says so whenever a source filter is active. Searching all sources, or rephrasing, helps until ragite lets filters reach past the candidate depth.
+**Known limit of the source filter** ([pihme/ragite#49](https://github.com/pihme/ragite/issues/49)): ragite takes a fixed number of best candidates from all sources, fuses them, and only then does the query keep the rows of the chosen source. A source that ranks lower overall can come back with few or no passages even though it has matching text; for example `FTS5` limited to `ragite-docs` returns nothing, although 11 ragite-docs chunks contain that word. The search page says so whenever a source filter is active. Searching all sources, or rephrasing, helps until ragite lets filters reach past the candidate depth.
 
 **More SQL**: [examples/](examples/) has runnable `.sql` files for every part of ragite's public interface: create a table, insert each format, update and delete, search documents and chunks, join a chunk to its document, show the model, embed text.
 
@@ -88,9 +88,9 @@ SQLite normally runs the search first and then looks up `doc_info` by `doc_id`. 
 | --- | --- | --- | --- |
 | SQLite documentation 3.54.1 (subset, incl. the `sqlite3` CLI page) | 74 | 1.54 MB | Public domain |
 | Wikipedia: SQLite (en, de), SQL, Relational database, B-tree | 5 | 0.11 MB | CC BY-SA 4.0 |
-| ragite README, SPEC, GLOSSARY | 3 | 0.05 MB | MIT OR Apache-2.0 |
+| ragite README, SPEC, GLOSSARY, user guide, tinkering guide | 5 | 0.09 MB | MIT OR Apache-2.0 |
 
-That is 7,671 chunks and a 22 MB `demo.db` (2 KB of vector per chunk). ragite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
+That is 7,844 chunks and a 22 MB `demo.db` (2 KB of vector per chunk). ragite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
 
 `demo.db` is not committed: it is a 22 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`).
 

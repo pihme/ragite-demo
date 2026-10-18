@@ -46,8 +46,8 @@
   },
   "ragite_docs": {
     "repo": "pihme/ragite",
-    "commit": "ede2d57e16ad82027fb8c968d8828d035455b7b4",
+    "commit": "c1165ead6ffe26d21e0d4d378d0273e1d64e670d",
     "license": "MIT OR Apache-2.0",
-    "files": ["README.md", "SPEC.md", "GLOSSARY.md"]
+    "files": ["README.md", "SPEC.md", "GLOSSARY.md", "docs/guide.md", "docs/tinkering.md"]
   }
 }

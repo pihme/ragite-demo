@@ -78,8 +78,8 @@ def check_page_helpers(page) -> None:
 
 
 def check_filter_hint(page, base: str, out: Path) -> None:
-    """'virtual table' limited to the ragite docs returns no rows (pihme/ragite#49); the page must say why."""
-    page.goto(base + "/search?q=virtual+table&collection=ragite-docs")
+    """'FTS5' limited to the ragite docs returns no rows (pihme/ragite#49); the page must say why."""
+    page.goto(base + "/search?q=FTS5&collection=ragite-docs")
     page.wait_for_selector("#rs-filter-hint:not([hidden])", timeout=30_000)
     hint = page.inner_text("#rs-filter-hint")
     page.screenshot(path=str(out / "search-filter-hint.png"), full_page=False)
