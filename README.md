@@ -20,7 +20,7 @@ RAGite is a SQLite extension for retrieval: it splits documents into chunks, emb
 
 ## Requirements
 
-- **Linux x86-64.** RAGite publishes release binaries for Linux only so far (release 0.3.2 ships only `libragite.so` for Linux x86-64). On macOS or Windows, use a Linux container or build RAGite yourself.
+- **Linux x86-64.** RAGite publishes release binaries for Linux only so far (release 0.3.3 ships only `libragite.so` for Linux x86-64). On macOS or Windows, use a Linux container or build RAGite yourself.
 - Python 3.10+ whose `sqlite3` module can load extensions (true for most Linux builds; check with `python3 -c "import sqlite3; sqlite3.connect(':memory:').enable_load_extension(True)"`).
 - About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~25 MB.
 
@@ -32,7 +32,7 @@ cd ragite-demo
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 
-# Downloads libragite.so (RAGite v0.3.2) and the pinned sources, checks them, builds app/demo.db.
+# Downloads libragite.so (RAGite v0.3.3) and the pinned sources, checks them, builds app/demo.db.
 scripts/build-demo-db
 
 # The demo with the search page: http://127.0.0.1:8001/search

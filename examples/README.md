@@ -1,6 +1,6 @@
 # SQL examples
 
-Runnable examples of RAGite's public SQL interface (v0.3.2, the version 1 interface). They use only the Document table, its `_chunks` companion and the `ragite_*` functions, never RAGite's storage tables. Run them from the repository root, next to `libragite.so`; CI runs every file (`scripts/run-examples` and `tests/test_examples.py`).
+Runnable examples of RAGite's public SQL interface (v0.3.3, the version 1 interface). They use only the Document table, its `_chunks` companion and the `ragite_*` functions, never RAGite's storage tables. Run them from the repository root, next to `libragite.so`; CI runs every file (`scripts/run-examples` and `tests/test_examples.py`).
 
 ## On a new, empty database
 
