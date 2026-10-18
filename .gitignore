@@ -20,3 +20,8 @@ screenshots/
 .venv/
 __pycache__/
 .pytest_cache/
+# Coverage for SonarQube Cloud (written in CI)
+.coverage
+.coverage.*
+coverage.xml
+.scannerwork/

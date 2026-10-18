@@ -18,8 +18,15 @@ jobs:
   demo:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      # Scan pull requests and main only, and only when the secret exists.
+      # Dependabot and fork PRs get no secret; Dependabot is also skipped explicitly.
+      RUN_SONAR: ${{ secrets.SONAR_TOKEN != '' && github.actor != 'dependabot[bot]' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Sonar needs the full history for blame and new-code detection.
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -33,10 +40,11 @@ jobs:
             .cache
           key: sources-${{ hashFiles('data/sources.json') }}
       - run: pip install -r requirements-dev.txt
+      # Both steps run under coverage.py (.coveragerc) for SonarQube Cloud.
       - name: Build demo.db
-        run: make demo-db
+        run: make demo-db PYTHON="python -m coverage run"
       - name: Datasette test client
-        run: make test
+        run: make test PYTHON="python -m coverage run"
       - name: SQL examples in the sqlite3 shell
         run: |
           sudo apt-get install -y --no-install-recommends sqlite3 > /dev/null
@@ -74,6 +82,17 @@ jobs:
       - name: Datasette log
         if: always()
         run: cat datasette.log || true
+      - name: Coverage report for SonarQube Cloud
+        if: env.RUN_SONAR == 'true'
+        run: |
+          python -m coverage combine
+          python -m coverage xml -o coverage.xml
+          python -m coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+      - name: SonarQube Cloud scan
+        if: env.RUN_SONAR == 'true'
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # After the demo passed on a push to main, release-please opens or updates the
   # release pull request (version.txt, CHANGELOG.md). Merging that pull request

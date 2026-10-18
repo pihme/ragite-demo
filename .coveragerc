@@ -1,0 +1,7 @@
+# Coverage for SonarQube Cloud: CI runs `make demo-db test` under `coverage run`
+# and writes coverage.xml (see .github/workflows/ci.yml).
+[run]
+branch = true
+parallel = true
+relative_files = true
+include = scripts/build-demo-db
