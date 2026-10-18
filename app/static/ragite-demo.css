@@ -109,6 +109,7 @@ form button[type=button] { background: transparent; color: var(--rg-text); borde
 .select-wrapper select { color: var(--rg-text); padding: 9px 8px !important; border: 0 !important; }
 .select-wrapper::after { color: var(--rg-muted); }
 form label { color: var(--rg-muted); }
+input[type=checkbox], input[type=radio] { accent-color: var(--rg-demo); }
 
 /* ---------- SQL: canned queries never overflow the page ---------- */
 pre#sql-query, .wrapped-sql {
@@ -140,7 +141,43 @@ tr:hover td { background: color-mix(in srgb, var(--rg-accent) 5%, transparent); 
 .export-links, .suggested-facets, .count-sql, p.message-info, .filters { color: var(--rg-muted); }
 p.message-error, p.message-warning, p.message-info { border-radius: var(--rg-radius-md); }
 
+/* ---------- Datasette widgets that app.css paints light ---------- */
+/* Advanced export (table pages): a panel like the table card and the SQL block, not a white box */
+.advanced-export {
+  display: block; margin: 1.25rem 0 1rem; padding: .9rem 1.1rem; box-shadow: none;
+  background: var(--rg-surface); border: 1px solid var(--rg-line); border-radius: var(--rg-radius-md); color: var(--rg-muted);
+}
+.advanced-export h3 { margin: 0 0 .5rem; font-size: 1rem; color: var(--rg-text); }
+.advanced-export p { margin: .35rem 0; font-size: .9rem; color: var(--rg-muted); }
+.advanced-export form p { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; }
+.advanced-export form label { color: var(--rg-text-soft); font-weight: 400; display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; }
+.advanced-export input[type=checkbox] { width: 1rem; height: 1rem; margin: 0; }
+.advanced-export input[type=submit] {
+  background: transparent; color: var(--rg-text); border: 1px solid var(--rg-line-strong); border-radius: var(--rg-radius-sm);
+  font: 500 .85rem var(--rg-font-display); padding: .35rem .85rem; cursor: pointer;
+}
+.advanced-export input[type=submit]:hover { background: var(--rg-surface-2); border-color: var(--rg-accent); filter: none; }
+/* "0 results" note (queries and tables) */
+p.zero-results { background: var(--rg-surface); border: 1px solid var(--rg-line); border-radius: var(--rg-radius-md); color: var(--rg-muted); padding: .75rem 1rem; }
+/* Column cog menu and table/database actions menu */
+.dropdown-menu { background: var(--rg-surface-2); border: 1px solid var(--rg-line-strong); border-radius: var(--rg-radius-sm); box-shadow: var(--rg-shadow); color: var(--rg-text); font-family: var(--rg-font-body); font-size: .9rem; }
+.dropdown-menu li { border-bottom-color: var(--rg-line); }
+.dropdown-menu a:link, .dropdown-menu a:visited, .dropdown-menu a:focus, .dropdown-menu a:active { color: var(--rg-text); }
+.dropdown-menu a:hover { background: var(--rg-surface); color: var(--rg-text); }
+.dropdown-menu .dropdown-column-type, .dropdown-menu .dropdown-column-description { color: var(--rg-muted); }
+.dropdown-menu .hook { border-bottom-color: var(--rg-line-strong); }
+svg.dropdown-menu-icon { color: var(--rg-muted); }
+details .nav-menu-inner { background: var(--rg-header-bg); border: 1px solid var(--rg-line); border-radius: var(--rg-radius-sm); }
+/* Grey text that app.css sets for a light page */
+.type-float, .type-int { color: var(--rg-text-soft); }
+dl.column-descriptions dd { color: var(--rg-muted); }
+p.message-info { color: var(--rg-text); }
+
 @media (max-width: 760px) {
+  /* app.css turns rows into white cards on narrow screens */
+  .rows-and-columns tr { background: var(--rg-surface); border-color: var(--rg-line); }
+  .rows-and-columns td { border-bottom-color: var(--rg-line); }
+
   header > nav { height: auto; flex-wrap: wrap; padding: .6rem 1rem; gap: .5rem 1rem; }
   .rd-sep, header .crumbs { display: none; }
   .rd-links { margin-left: 0; width: 100%; overflow-x: auto; }

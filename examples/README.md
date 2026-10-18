@@ -30,6 +30,6 @@ sqlite3 -readonly app/demo.db < examples/demo/search-chunks.sql
 | [demo/chunk-with-document.sql](demo/chunk-with-document.sql) | A chunk joined to its document and attribution; all chunks of one document |
 | [demo/model-and-embed.sql](demo/model-and-embed.sql) | The extension's model, the table's model, a query embedding |
 
-The read-only ones are also canned queries in Datasette (`search`, `search_documents`, `chunks_with_document`, `document_chunks`, `model`, `embed`). Writes (`CREATE`, `INSERT`, `UPDATE`, `DELETE`) stay in these files rather than in writable canned queries, so anyone who can open the demo in a browser cannot change `demo.db`.
+The read-only ones are also canned queries in Datasette (`search`, `search_documents`, `chunks_with_document`, `document_chunks`, `model`, `embed`). Two writable canned queries, `create_table` and `insert_document`, create the ragite table `notes` in `demo.db` and add documents to it (run `create_table` first; both are repeatable). They change your local `demo.db`; to get the original back, download `demo.db` again from the [release](https://github.com/pihme/ragite-demo/releases) or rebuild it with `scripts/build-demo-db`. `UPDATE` and `DELETE` stay in the files above.
 
 In Python, load the extension with `con.enable_load_extension(True)` and `con.load_extension('./libragite')`; the SQL is the same.

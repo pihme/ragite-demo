@@ -90,11 +90,58 @@ async def test_empty_query_returns_nothing(ds):
 async def test_only_hybrid_queries_are_offered(ds):
     # The demo uses ragite's public interface only: docs, docs_chunks and the ragite_* functions.
     queries = (await ds.client.get("/demo.json")).json()["queries"]
-    assert sorted(q["name"] for q in queries) == [
-        "chunks_with_document", "document_chunks", "embed", "model", "search", "search_documents"]
+    assert [q["name"] for q in queries] == [
+        "chunks_with_document", "search_documents", "document_chunks", "insert_document", "create_table",
+        "model", "embed", "search"]
+    assert {q["name"] for q in queries if q.get("write")} == {"insert_document", "create_table"}
     for q in queries:
         for storage in ("docs_vec", "docs_fts", "docs_chunk_rows", "docs_documents", "docs_model"):
             assert storage not in q["sql"], (q["name"], storage)
+
+
+@pytest.fixture
+def ds_copy(tmp_path):
+    # The write queries change the database, so they run on a copy: app/demo.db is what CI releases.
+    assert (APP / "demo.db").exists(), "build app/demo.db first: scripts/build-demo-db"
+    db = tmp_path / "demo.db"
+    db.write_bytes((APP / "demo.db").read_bytes())
+    return Datasette(
+        [str(db)],
+        metadata=yaml.safe_load((APP / "metadata.yml").read_text()),
+        settings=json.loads((APP / "settings.json").read_text()),
+        sqlite_extensions=[LIB_ARG],
+    ), db
+
+
+async def run_write(ds, query, **params):
+    # A writable canned query is a POST with Datasette's CSRF token; it answers with a redirect.
+    form = await ds.client.get(f"/demo/{query}")
+    token = re.search(r'name="csrftoken" value="([^"]+)"', form.text).group(1)
+    resp = await ds.client.post(f"/demo/{query}", data={"csrftoken": token, **params}, cookies=form.cookies)
+    assert resp.status_code == 302, resp.text
+    messages = ds.unsign(resp.cookies["ds_messages"], "messages")
+    assert all(kind != ds.ERROR for _, kind in messages), messages
+
+
+@pytest.mark.asyncio
+async def test_write_queries_are_repeatable_on_a_copy(ds_copy):
+    ds, db = ds_copy
+    original = (APP / "demo.db").read_bytes()
+    doc = {"text": "# Backups\n\nUse VACUUM INTO to copy a live database.", "source": "backup.md", "format": "text/markdown"}
+    for _ in range(2):
+        await run_write(ds, "create_table")
+        await run_write(ds, "insert_document", **doc)
+    await run_write(ds, "insert_document", text="WAL lets readers and a writer work at once.", source="wal.txt", format="")
+    con = sqlite3.connect(db)
+    con.enable_load_extension(True)
+    con.load_extension(LIB_ARG)
+    assert con.execute("SELECT source, format FROM notes ORDER BY doc_id").fetchall() == [
+        ("backup.md", "text/markdown"), ("wal.txt", "text/plain")]
+    assert ("Use VACUUM INTO to copy a live database.",) in con.execute("SELECT chunk FROM notes_chunks").fetchall()
+    hit = con.execute("SELECT source FROM notes WHERE notes MATCH 'copy a live database'").fetchone()
+    assert hit == ("backup.md",)
+    assert con.execute("SELECT count(*) FROM docs").fetchone()[0] > 0
+    assert (APP / "demo.db").read_bytes() == original
 
 
 @pytest.mark.asyncio
