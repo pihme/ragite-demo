@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Quick check for a release-please pull request. It replaces the full demo
+# build on release-please--* branches, because such a pull request only bumps
+# the version and the changelog: the code it releases was already tested on
+# main, and the push to main after the merge builds and tests demo.db again.
+#
+# Fails if the branch changes anything besides the release files, if
+# version.txt and the manifest disagree, or if CHANGELOG.md has no section for
+# the new version.
+set -euo pipefail
+
+base="${1:-origin/main}"
+allowed='^(version\.txt|\.release-please-manifest\.json|CHANGELOG\.md)$'
+
+changed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
+echo "Changed files:"
+echo "$changed"
+other=$(printf '%s\n' "$changed" | grep -Ev "$allowed" | grep -v '^$' || true)
+if [ -n "$other" ]; then
+  echo "::error::A release pull request may change only the version and the changelog. Also changed: $(echo $other)"
+  exit 1
+fi
+
+version=$(tr -d '[:space:]' < version.txt)
+manifest=$(python3 -c 'import json; print(json.load(open(".release-please-manifest.json"))["."])')
+echo "version.txt $version, manifest $manifest"
+if [ -z "$version" ] || [ "$version" != "$manifest" ]; then
+  echo "::error::version.txt ($version) and .release-please-manifest.json ($manifest) disagree."
+  exit 1
+fi
+
+if ! grep -Eq "^## \[$(printf '%s' "$version" | sed 's/\./\\./g')\]" CHANGELOG.md; then
+  echo "::error::CHANGELOG.md has no section for $version."
+  exit 1
+fi
+
+echo "Release pull request for $version is consistent."

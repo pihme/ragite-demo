@@ -22,7 +22,7 @@ Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.6
 Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed data, with attribution in `DATA_SOURCES.md` and `doc_info`; no CDN or external service at run time; use only ragite's public SQL interface (hybrid `MATCH` on `docs` and `docs_chunks`, never its storage tables, SPEC D2); heavy work runs in CI.
 
 - Tests: `make test` must pass before anything lands on `main`. Tests stay offline: no real accounts, tokens or live services.
-- Releases: release-please (`release-please-config.json`, `.release-please-manifest.json`, version file `version.txt`, `CHANGELOG.md`). CI uploads `demo.db` as an artifact on every run; each release also attaches it.
+- Releases: release-please (`release-please-config.json`, `.release-please-manifest.json`, version file `version.txt`, `CHANGELOG.md`). CI uploads `demo.db` as an artifact on every run except release pull requests; each release also attaches it.
 
 ## Shared rules
 
@@ -37,7 +37,7 @@ Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed da
 
 ### Versions and releases
 
-- **Releases use release-please, not `release.py`** (the Python counterpart of RAGite's release-plz setup). There is no `.github/release.json`. After CI passes on a push to `main`, the `release` job opens or updates a release pull request that bumps `version.txt` and `.release-please-manifest.json` and adds the new section to `CHANGELOG.md`. Merging that pull request tags `ragite-demo/vX.Y.Z`, creates the GitHub Release named `ragite-demo X.Y.Z` and attaches the `demo.db` built and tested in that run, `DATA_SOURCES.md`, `LICENSE` and `THIRD_PARTY_NOTICES.md`.
+- **Releases use release-please, not `release.py`** (the Python counterpart of RAGite's release-plz setup). There is no `.github/release.json`. After CI passes on a push to `main`, the `release` job opens or updates a release pull request that bumps `version.txt` and `.release-please-manifest.json` and adds the new section to `CHANGELOG.md`. Merging that pull request tags `ragite-demo/vX.Y.Z`, creates the GitHub Release named `ragite-demo X.Y.Z` and attaches the `demo.db` built and tested in that run, `DATA_SOURCES.md`, `LICENSE` and `THIRD_PARTY_NOTICES.md`. On the release pull request itself (`release-please--*` branch) CI runs only `release-pr-check` (`scripts/check-release-pr`): the branch may change only those three files, and they must agree. The full demo job runs again on the push after the merge.
 - `feat:` bumps minor, `fix:`/`perf:` patch, a breaking change (`!` or a `BREAKING CHANGE:` footer) major. `docs:`, `test:`, `refactor:`, `chore:`, `ci:`, `build:` never bump and stay out of the changelog. Commit titles become the changelog lines verbatim.
 - **Choose a version** (only when the maintainer decided it): a commit with the footer `Release-As: X.Y.Z`, e.g. `git commit --allow-empty -m "chore: release 2.0" -m "Release-As: 2.0.0"`. **Squash merges keep only the commit messages, not the pull request body**, so the footer must be in a commit message of the branch; a `Release-As:` line in the PR description is ignored.
 - Never tag, bump `version.txt` or create releases by hand, and never edit published release notes or past `CHANGELOG.md` sections.
