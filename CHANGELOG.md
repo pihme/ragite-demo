@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/pihme/ragite-demo/compare/ragite-demo/v0.2.0...ragite-demo/v1.0.0) (2026-10-18)
+
+
+### Added
+
+* update to RAGite 1.0.0 ([#17](https://github.com/pihme/ragite-demo/issues/17)) ([a5afc18](https://github.com/pihme/ragite-demo/commit/a5afc1808be36de37923c29423b55074522b380c))
+
 ## [0.2.0](https://github.com/pihme/ragite-demo/compare/ragite-demo/v0.1.0...ragite-demo/v0.2.0) (2026-10-18)
 
 
