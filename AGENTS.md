@@ -87,7 +87,7 @@ GitHub issues in `pihme/ragite-demo`, via `gh`. See `docs/agents/issue-tracker.m
 
 ### Triage labels
 
-Default roles: `needs-triage`, `needs-info`, `ready-for-bot`, `ready-for-agent`, `ready-for-qa`, `ready-for-human`, `wontfix`, plus `bug` / `enhancement`. `ready-for-bot` is for in-house bots (Maintainer), `ready-for-agent` is always for an external agent, and `ready-for-qa` is for QA. See `docs/agents/triage-labels.md`.
+Labels: `needs-triage`, `needs-info`, `needs-input`, `ready-for-maintainer`, `ready-for-development`, `ready-for-qa`, `ready-for-human`, `wontfix`, plus `bug` / `enhancement`. `ready-for-maintainer` is for Maintainer (website, docs fixes, smaller changes), `ready-for-development` is for Developer (larger feature and code work), and `ready-for-qa` is for QA. Team roles, labels, handover, merging and release mode: `docs/agents/team.md` (same in every repo; change it in presets first). See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
