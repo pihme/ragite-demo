@@ -34,7 +34,7 @@ The `demo.db` attached to each GitHub Release contains this data; `DATA_SOURCES.
 
 | Name | Version | License |
 | --- | --- | --- |
-| pytest | 8.4.2 | MIT |
+| pytest | 9.1.1 | MIT |
 | pytest-asyncio | 1.4.0 | Apache-2.0 |
 | PyYAML | 6.0.3 | MIT |
 | coverage.py | 7.16.2 | Apache-2.0 |
