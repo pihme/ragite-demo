@@ -11,7 +11,7 @@ MIT because it is an example for an open library: people copy demo code. The ind
 
 ## How to work here
 
-- Reference environment: `nix/reference-env` is Python 3.12, pip and GNU make. `nix/sqlite` adds the sqlite3 CLI. `nix/browsers` adds Chromium (`CHROME_PATH`) and includes the other two. Run `nix develop ./nix/browsers -c make test`. Each `flake.lock` is committed; Dependabot updates it.
+- Reference environment: `nix/reference-env` is Python 3.12, pip and GNU make. `nix/sqlite` adds the sqlite3 CLI. `nix/browsers` adds Chromium (`CHROME_PATH`), includes the other two, and puts Nix libstdc++ on `LD_LIBRARY_PATH` so pip wheels such as greenlet load. Run `nix develop ./nix/browsers -c make test`. Each `flake.lock` is committed; Dependabot updates it.
 Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.65.5, RAGite release `libragite.so` (Linux x86-64).
 
 - `data/sources.json`: every input, pinned (RAGite release and model by SHA-256 and id, SQLite doc archive by SHA-256, Wikipedia by revision id, RAGite docs by commit).
