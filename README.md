@@ -20,7 +20,7 @@ RAGite is a SQLite extension for retrieval: it splits documents into chunks, emb
 
 ## Requirements
 
-- **Linux x86-64.** RAGite publishes release binaries for Linux only so far (release 1.0.0 ships only `libragite.so` for Linux x86-64). On macOS or Windows, use a Linux container or build RAGite yourself.
+- **Linux x86-64.** RAGite publishes release binaries for Linux only so far (release 1.0.1 ships only `libragite.so` for Linux x86-64). On macOS or Windows, use a Linux container or build RAGite yourself.
 - Python 3.10+ whose `sqlite3` module can load extensions (true for most Linux builds; check with `python3 -c "import sqlite3; sqlite3.connect(':memory:').enable_load_extension(True)"`).
 - About 165 MB of disk: `libragite.so` is ~135 MB because the embedding model is built in; `demo.db` is ~25 MB.
 
@@ -32,7 +32,7 @@ cd ragite-demo
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 
-# Downloads libragite.so (RAGite v1.0.0) and the pinned sources, checks them, builds app/demo.db.
+# Downloads libragite.so (RAGite v1.0.1) and the pinned sources, checks them, builds app/demo.db.
 scripts/build-demo-db
 
 # The demo with the search page: http://127.0.0.1:8001/search
@@ -92,9 +92,9 @@ SQLite normally runs the search first and then looks up `doc_info` by `doc_id`. 
 | --- | --- | --- | --- |
 | SQLite documentation 3.54.1 (subset, incl. the `sqlite3` CLI page) | 74 | 1.52 MB | Public domain |
 | Wikipedia: SQLite (en, de), SQL, Relational database, B-tree; Retrieval-augmented generation (en, de), Large language model, Information retrieval, Semantic search, Full-text search, Inverted index, Okapi BM25, Tf–idf, Word embedding, Sentence embedding, Cosine similarity, Vector database, Nearest neighbor search, Hierarchical navigable small world | 20 | 0.30 MB | CC BY-SA 4.0 |
-| RAGite README, SPEC, GLOSSARY, user guide, tinkering guide | 5 | 0.09 MB | MIT OR Apache-2.0 |
+| RAGite README, SPEC, GLOSSARY, user guide, tinkering guide | 5 | 0.11 MB | MIT OR Apache-2.0 |
 
-That is 8,751 chunks and a 25 MB `demo.db` (2 KB of vector per chunk). RAGite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
+That is 8,789 chunks and a 25 MB `demo.db` (2 KB of vector per chunk). RAGite makes every heading, list item and table cell its own chunk, so the build joins each table row into one paragraph (cells separated by ` | `) and each list of short items into one paragraph (items separated by `; `), and turns no-break spaces into plain spaces. Headings still become short chunks of their own and can rank high for one-word queries. Exact sources, pinned revisions, the cleaning steps and attribution: [DATA_SOURCES.md](DATA_SOURCES.md).
 
 `demo.db` is not committed: it is a 25 MB binary that the build script recreates from pinned inputs in a few seconds, and keeping the Wikipedia text out of the repository keeps the code under one license. CI uploads each build as an artifact (`demo-db`, with `DATA_SOURCES.md`), and every [release](https://github.com/pihme/ragite-demo/releases) attaches the `demo.db` it was tested with, next to `DATA_SOURCES.md` for attribution. To search it you still need `libragite.so` from the RAGite version in `data/sources.json`.
 

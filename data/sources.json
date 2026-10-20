@@ -1,8 +1,8 @@
 {
   "ragite": {
-    "version": "1.0.0",
-    "url": "https://github.com/pihme/ragite/releases/download/ragite/v1.0.0/libragite.so",
-    "sha256": "c1abeeb198bbe0e66717493b926b370736c930d988d8abad662ea2836d1590ca",
+    "version": "1.0.1",
+    "url": "https://github.com/pihme/ragite/releases/download/ragite/v1.0.1/libragite.so",
+    "sha256": "26259329d4401633485302f176f32bb5fdd88e9a754feb7b4ed3af48d4a730aa",
     "model": "potion-retrieval-32M@6fc8051fab2a1e0ee76689cf08c853792ac285e7"
   },
   "sqlite_docs": {
@@ -61,7 +61,7 @@
   },
   "ragite_docs": {
     "repo": "pihme/ragite",
-    "commit": "8d9595cacdb4f31f5213b3499b6fa6ac1878c948",
+    "commit": "e5b6db93150b48d5b8c8fd2ca958f116169b3aa8",
     "license": "MIT OR Apache-2.0",
     "files": ["README.md", "SPEC.md", "GLOSSARY.md", "docs/guide.md", "docs/tinkering.md"]
   }
