@@ -17,6 +17,8 @@
             shellHook = ''
 
               export CHROME_PATH=${pkgs.chromium}/bin/chromium
+              # pip wheels such as greenlet (Playwright) need libstdc++.
+              export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
             '';
         };
