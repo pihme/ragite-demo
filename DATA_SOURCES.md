@@ -46,8 +46,8 @@ Text from Wikipedia, the free encyclopedia, licensed under the [Creative Commons
 
 ## 3. RAGite documentation (MIT OR Apache-2.0)
 
-- Files: `README.md`, `SPEC.md`, `GLOSSARY.md`, the user guide `docs/guide.md` and the tinkering guide `docs/tinkering.md` from [pihme/ragite](https://github.com/pihme/ragite) at commit [`8d9595c`](https://github.com/pihme/ragite/tree/8d9595cacdb4f31f5213b3499b6fa6ac1878c948), the commit tagged `ragite/v1.0.0`, the RAGite release the demo runs, so the files describe that release's behaviour.
-- License: `MIT OR Apache-2.0`, Copyright (c) 2026 ragite contributors ([LICENSE-MIT](https://github.com/pihme/ragite/blob/8d9595cacdb4f31f5213b3499b6fa6ac1878c948/LICENSE-MIT), [LICENSE-APACHE](https://github.com/pihme/ragite/blob/8d9595cacdb4f31f5213b3499b6fa6ac1878c948/LICENSE-APACHE)).
+- Files: `README.md`, `SPEC.md`, `GLOSSARY.md`, the user guide `docs/guide.md` and the tinkering guide `docs/tinkering.md` from [pihme/ragite](https://github.com/pihme/ragite) at commit [`e5b6db9`](https://github.com/pihme/ragite/tree/e5b6db93150b48d5b8c8fd2ca958f116169b3aa8), the commit tagged `ragite/v1.0.1`, the RAGite release the demo runs, so the files describe that release's behaviour.
+- License: `MIT OR Apache-2.0`, Copyright (c) 2026 ragite contributors ([LICENSE-MIT](https://github.com/pihme/ragite/blob/e5b6db93150b48d5b8c8fd2ca958f116169b3aa8/LICENSE-MIT), [LICENSE-APACHE](https://github.com/pihme/ragite/blob/e5b6db93150b48d5b8c8fd2ca958f116169b3aa8/LICENSE-APACHE)).
 - Changes: none; indexed as Markdown.
 
 ## Not included
