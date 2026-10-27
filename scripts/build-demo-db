@@ -204,7 +204,35 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+FETCH_HOSTS = ("github.com", "githubusercontent.com", "sqlite.org", "wikipedia.org")
+
+
+def check_url(url: str) -> str:
+    """Downloads come from data/sources.json; only https to the known hosts."""
+    u = urllib.parse.urlsplit(url)
+    host = (u.hostname or "").lower()
+    if u.scheme != "https" or not any(host == h or host.endswith("." + h) for h in FETCH_HOSTS):
+        sys.exit(f"refusing to download {url}: not https on {', '.join(FETCH_HOSTS)}")
+    return url
+
+
+def inside(base: Path, *parts: str) -> Path:
+    """base/parts, refusing anything that resolves outside base (e.g. '..' in sources.json)."""
+    path = base.joinpath(*parts)
+    if not path.resolve().is_relative_to(base.resolve()):
+        sys.exit(f"refusing path {path}: outside {base}")
+    return path
+
+
+def check_model(model: str) -> str:
+    """The model name goes into the CREATE VIRTUAL TABLE text, so allow only plain name characters."""
+    if not re.fullmatch(r"[A-Za-z0-9._/@:-]+", model):
+        sys.exit(f"data/sources.json: unexpected model name {model!r}")
+    return model
+
+
 def fetch(url: str, retries: int = 4) -> bytes:
+    check_url(url)
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -235,7 +263,7 @@ def cached_download(url: str, dest: Path, sha256: str | None = None) -> Path:
 
 
 def sqlite_docs(cfg: dict, cache: Path):
-    archive = cached_download(cfg["url"], cache / Path(cfg["url"]).name, cfg["sha256"])
+    archive = cached_download(cfg["url"], inside(cache, Path(urllib.parse.urlsplit(cfg["url"]).path).name), cfg["sha256"])
     with zipfile.ZipFile(archive) as zf:
         for page in cfg["pages"]:
             raw = zf.read(cfg["prefix"] + page).decode("utf-8", errors="replace")
@@ -255,7 +283,7 @@ def sqlite_docs(cfg: dict, cache: Path):
 def wikipedia(cfg: dict, cache: Path):
     for art in cfg["articles"]:
         lang, title, revid = art["lang"], art["title"], art["revid"]
-        dest = cache / "wikipedia" / f"{lang}-{revid}.json"
+        dest = inside(cache, "wikipedia", f"{lang}-{int(revid)}.json")
         if not dest.exists():
             q = urllib.parse.urlencode({
                 "action": "parse", "oldid": revid, "prop": "text|displaytitle|revid",
@@ -284,7 +312,7 @@ def wikipedia(cfg: dict, cache: Path):
 def ragite_docs(cfg: dict, cache: Path):
     for name in cfg["files"]:
         url = f"https://raw.githubusercontent.com/{cfg['repo']}/{cfg['commit']}/{name}"
-        dest = cache / "ragite" / cfg["commit"][:12] / name
+        dest = inside(cache, "ragite", cfg["commit"][:12], name)
         if not dest.exists():
             print(f"fetch {url}")
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -345,7 +373,7 @@ def main() -> None:
     con.enable_load_extension(True)
     con.load_extension(lib_arg)
     con.enable_load_extension(False)
-    model = rg["model"]
+    model = check_model(rg["model"])
     (default_model,) = con.execute("SELECT technical_id FROM ragite_default_model()").fetchone()
     if default_model != model:
         sys.exit(f"libragite.so has model {default_model}, data/sources.json pins {model}")

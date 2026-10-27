@@ -107,6 +107,16 @@
     return db + "/docs_chunks/" + encodeURIComponent(row.chunk_id);
   }
 
+  // Source links come from the demo database; only http(s) may become a link target.
+  function safeHref(u) {
+    try {
+      const x = new URL(String(u || ""), location.href);
+      return x.protocol === "https:" || x.protocol === "http:" ? x.href : "#";
+    } catch (e) {
+      return "#";
+    }
+  }
+
   function shortUrl(u) {
     try {
       const x = new URL(u);
@@ -130,12 +140,12 @@
     li.className = "rs-card" + (isSection ? " rs-card--section" : "") + (index === 0 ? " is-top" : "");
     li.innerHTML =
       '<div class="rs-card-kicker"><span class="rs-src">' + escapeHtml(COLLECTION_LABEL[row.collection] || row.collection) + "</span></div>" +
-      '<a class="rs-card-title" href="' + escapeHtml(row.url) + '">' + escapeHtml(row.title || "") + "</a>" +
+      '<a class="rs-card-title" href="' + escapeHtml(safeHref(row.url)) + '">' + escapeHtml(row.title || "") + "</a>" +
       (crumbs.length ? '<div class="rs-card-path">' + crumbs.join(" › ") + "</div>" : "") +
       (isSection ? "" : '<p class="rs-card-text">' + highlight(chunk, q) + "</p>") + ctx +
       '<div class="rs-card-foot">' + relevanceHtml(row, best, index) +
         '<span class="rs-links">' +
-          '<a href="' + escapeHtml(row.url) + '" title="' + escapeHtml(row.url) + '">' + escapeHtml(shortUrl(row.url)) + " ↗</a>" +
+          '<a href="' + escapeHtml(safeHref(row.url)) + '" title="' + escapeHtml(row.url) + '">' + escapeHtml(shortUrl(row.url)) + " ↗</a>" +
           '<a href="' + escapeHtml(db + "/doc_info/" + row.doc_id) + '">Document</a>' +
           '<a href="' + escapeHtml(chunkUrl(row)) + '">Chunk</a>' +
         "</span></div>";
@@ -169,10 +179,16 @@
     more.hidden = left <= 0;
     more.textContent = "Show " + Math.min(PAGE, left) + " more · " + left + " left";
     const page = db + "/search?" + new URLSearchParams({ q: q, collection: coll }).toString();
-    status.innerHTML = rows.length
-      ? escapeHtml(rows.length + " passage" + (rows.length === 1 ? "" : "s") + (ms != null ? " · " + ms + " ms" : "")) +
-        ' · <a href="' + escapeHtml(page) + '">Show this search as SQL</a>'
-      : "No passages found.";
+    // Built from text nodes: the query only ever reaches the page as text or an encoded URL.
+    status.replaceChildren();
+    if (rows.length) {
+      const sql = document.createElement("a");
+      sql.href = page;
+      sql.textContent = "Show this search as SQL";
+      status.append(rows.length + " passage" + (rows.length === 1 ? "" : "s") + (ms != null ? " · " + ms + " ms" : "") + " · ", sql);
+    } else {
+      status.textContent = "No passages found.";
+    }
   }
 
   async function run(pushState) {
