@@ -224,6 +224,13 @@ def inside(base: Path, *parts: str) -> Path:
     return path
 
 
+def check_model(model: str) -> str:
+    """The model name goes into the CREATE VIRTUAL TABLE text, so allow only plain name characters."""
+    if not re.fullmatch(r"[A-Za-z0-9._/@:-]+", model):
+        sys.exit(f"data/sources.json: unexpected model name {model!r}")
+    return model
+
+
 def fetch(url: str, retries: int = 4) -> bytes:
     check_url(url)
     for attempt in range(retries):
@@ -366,9 +373,7 @@ def main() -> None:
     con.enable_load_extension(True)
     con.load_extension(lib_arg)
     con.enable_load_extension(False)
-    model = rg["model"]
-    if not re.fullmatch(r"[A-Za-z0-9._/@:-]+", model):  # goes into the CREATE VIRTUAL TABLE text
-        sys.exit(f"data/sources.json: unexpected model name {model!r}")
+    model = check_model(rg["model"])
     (default_model,) = con.execute("SELECT technical_id FROM ragite_default_model()").fetchone()
     if default_model != model:
         sys.exit(f"libragite.so has model {default_model}, data/sources.json pins {model}")
