@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.0...ragite-demo/v1.0.1) (2026-10-28)
+
+
+### Fixed
+
+* **deps:** bump ragite to v1.1.2 ([#36](https://github.com/pihme/ragite-demo/issues/36)) ([00d75f8](https://github.com/pihme/ragite-demo/commit/00d75f867ca037aa5b8660476bcba35673131c31))
+* harden demo build and search page (Sonar) ([#33](https://github.com/pihme/ragite-demo/issues/33)) ([c3571fe](https://github.com/pihme/ragite-demo/commit/c3571fea896f81978e58024f00e21794be2996b4))
+
 ## [1.0.0](https://github.com/pihme/ragite-demo/compare/ragite-demo/v0.2.0...ragite-demo/v1.0.0) (2026-10-18)
 
 
