@@ -40,4 +40,4 @@ The `demo.db` attached to each GitHub Release contains this data; `DATA_SOURCES.
 | coverage.py | 7.17.0 | Apache-2.0 |
 | sqlite3 shell (Ubuntu package, runs the examples) | distribution version | Public domain |
 | Playwright for Python (and the Chromium it installs) | 1.64.1 | Apache-2.0 (Chromium: BSD-3-Clause and others) |
-| GitHub Action `SonarSource/sonarqube-scan-action` (CI only, runs SonarScanner CLI 8.1.0.6389) | 8.3.0 | LGPL-3.0 |
+| GitHub Action `SonarSource/sonarqube-scan-action` (CI only, runs SonarScanner CLI 8.3.0.16463) | 8.4.0 | LGPL-3.0 |
