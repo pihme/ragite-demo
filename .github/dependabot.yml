@@ -1,6 +1,9 @@
 # Commit prefixes follow the release rules in AGENTS.md (release-please):
-#   runtime deps and shipped Docker base images -> fix(deps): patch release
+#   runtime deps, shipped Docker base images and Nix locks -> fix(deps): patch release
 #   dev deps -> chore(deps-dev), GitHub Actions -> ci(deps), unshipped images -> chore(deps): no release
+# Nix locks release because CI builds the released demo.db inside nix/browsers
+# (which includes nix/sqlite and nix/reference-env), so a lock bump changes a
+# release input.
 # Never reword a Dependabot title into feat! (see AGENTS.md).
 version: 2
 updates:
@@ -44,7 +47,8 @@ updates:
     open-pull-requests-limit: 5
     labels: [dependencies, ready-for-maintainer]
     commit-message:
-      prefix: chore
+      # fix, not chore: a Nix lock bump is a release input (see above).
+      prefix: fix
       include: scope
     groups:
       nix:
