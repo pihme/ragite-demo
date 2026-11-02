@@ -3,6 +3,9 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.sqlite.url = "path:../sqlite";
+  # Use the top-level nixpkgs for SQLite and Python too, so a nixpkgs bump
+  # updates everything that builds demo.db, not only Chromium.
+  inputs.sqlite.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = { self, nixpkgs, sqlite }:
     let

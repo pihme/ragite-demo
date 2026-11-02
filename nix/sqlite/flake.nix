@@ -3,6 +3,8 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.reference-env.url = "path:../reference-env";
+  # Use the same nixpkgs for Python as for SQLite.
+  inputs.reference-env.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = { self, nixpkgs, reference-env }:
     let
