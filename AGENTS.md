@@ -11,7 +11,7 @@ MIT because it is an example for an open library: people copy demo code. The ind
 
 ## How to work here
 
-- Reference environment: `nix/reference-env` is Python 3.12, pip and GNU make. `nix/sqlite` adds the sqlite3 CLI. `nix/browsers` adds Chromium (`CHROME_PATH`), includes the other two, and puts Nix libstdc++ on `LD_LIBRARY_PATH` so pip wheels such as greenlet load. Run `nix develop ./nix/browsers -c make test`. Each `flake.lock` is committed; Dependabot updates it.
+- Reference environment: `nix/reference-env` is Python 3.12, pip and GNU make. `nix/sqlite` adds the sqlite3 CLI. `nix/browsers` adds Chromium (`CHROME_PATH`), includes the other two, and puts Nix libstdc++ on `LD_LIBRARY_PATH` so pip wheels such as greenlet load. Run `nix develop ./nix/browsers -c make test`. Each `flake.lock` is committed; Dependabot updates it as `fix(deps):`, which cuts a patch release: CI builds the released `demo.db` inside `nix/browsers`, so the Nix locks are release inputs.
 Stack: Python 3.10+ (build script uses the standard library only), Datasette 0.65.5, RAGite release `libragite.so` (Linux x86-64).
 
 - `data/sources.json`: every input, pinned (RAGite release and model by SHA-256 and id, SQLite doc archive by SHA-256, Wikipedia by revision id, RAGite docs by commit).
@@ -46,7 +46,7 @@ Invariants: no data, `demo.db` or `libragite.so` in git; only freely licensed da
 
 ### Dependabot
 
-- Commit prefixes (set in `.github/dependabot.yml`): runtime dependencies and shipped Docker base images `fix(deps):` (patch release), dev dependencies `chore(deps-dev):`, GitHub Actions `ci(deps):`, images that are not shipped (examples, tests) `chore(deps):`.
+- Commit prefixes (set in `.github/dependabot.yml`): runtime dependencies, shipped Docker base images and the Nix locks (`nix/*/flake.lock`, release inputs of `demo.db`) `fix(deps):` (patch release), dev dependencies `chore(deps-dev):`, GitHub Actions `ci(deps):`, images that are not shipped (examples, tests) `chore(deps):`.
 - **Never turn a dependency update into `feat!:`** or reword its title. A major dependency update is still `fix(deps)` / `chore(deps-dev)`. If it forces a breaking change on users (for example a new minimum runtime), that is a separate, deliberate commit after the maintainer decides.
 - Never merge a Dependabot PR on green CI alone. Dependabot PRs arrive with `ready-for-maintainer` (set by `.github/dependabot.yml`); Maintainer reviews the content and sets `ready-for-qa`; QA merges (squash, keep the Dependabot title). Decisions go to the owner with `ready-for-human`.
 - No Dependabot PRs are handed on during a release. Release PRs from 1.0.0 on are merged only by the owner. Details: `docs/agents/team.md`.
