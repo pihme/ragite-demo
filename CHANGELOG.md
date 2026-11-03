@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.1...ragite-demo/v1.0.2) (2026-11-03)
+
+
+### Fixed
+
+* **deps:** bump ragite to v1.1.4 ([#44](https://github.com/pihme/ragite-demo/issues/44)) ([7243e39](https://github.com/pihme/ragite-demo/commit/7243e39f5e69c647b6476a1a73cf872f0fd09171))
+
 ## [1.0.1](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.0...ragite-demo/v1.0.1) (2026-10-28)
 
 
