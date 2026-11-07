@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.2...ragite-demo/v1.0.3) (2026-11-07)
+
+
+### Fixed
+
+* **deps:** bump the nix group across 3 directories with 1 update ([#49](https://github.com/pihme/ragite-demo/issues/49)) ([fe4859b](https://github.com/pihme/ragite-demo/commit/fe4859b303e2759dd4933d5782e6619e2faea3a8))
+
 ## [1.0.2](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.1...ragite-demo/v1.0.2) (2026-11-03)
 
 
