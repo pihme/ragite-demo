@@ -6,7 +6,7 @@ the RAGite release binary and the SQLite documentation archive by SHA-256, the W
 articles by revision id, and the RAGite docs by commit.
 
     scripts/build-demo-db                     # downloads the release libragite.so to ./libragite.so
-    scripts/build-demo-db --lib ./libragite.so --out app/demo.db
+    scripts/build-demo-db --lib ./libragite.so  # uses an existing libragite.so
 """
 
 from __future__ import annotations
@@ -27,6 +27,9 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "app" / "demo.db"
+CACHE = ROOT / ".cache"
+SOURCES = ROOT / "data" / "sources.json"
 USER_AGENT = "ragite-demo-build/0.1 (+https://github.com/pihme/ragite-demo)"
 
 # Elements dropped with everything inside them.
@@ -347,13 +350,10 @@ CREATE TABLE build_info (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--lib", help="path to libragite.so (default: download the pinned release to ./libragite.so)")
-    ap.add_argument("--out", default=str(ROOT / "app" / "demo.db"), help="output database (default: app/demo.db)")
-    ap.add_argument("--cache", default=str(ROOT / ".cache"), help="download cache (default: .cache/)")
-    ap.add_argument("--sources", default=str(ROOT / "data" / "sources.json"))
     args = ap.parse_args()
 
-    sources = json.loads(Path(args.sources).read_text("utf-8"))
-    cache = Path(args.cache)
+    sources = json.loads(SOURCES.read_text("utf-8"))
+    cache = CACHE
     rg = sources["ragite"]
     if args.lib:
         lib = Path(args.lib).resolve()
@@ -365,7 +365,7 @@ def main() -> None:
     docs = [*sqlite_docs(sources["sqlite_docs"], cache), *wikipedia(sources["wikipedia"], cache),
             *ragite_docs(sources["ragite_docs"], cache)]
 
-    out = Path(args.out)
+    out = OUT
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".db.part")
     tmp.unlink(missing_ok=True)
@@ -389,7 +389,7 @@ def main() -> None:
                 "INSERT INTO doc_info VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (doc_id, d["collection"], d["title"], d["url"], d["lang"], d["license"], d["revision"], len(d["text"].encode())),
             )
-        manifest = hashlib.sha256(Path(args.sources).read_bytes()).hexdigest()
+        manifest = hashlib.sha256(SOURCES.read_bytes()).hexdigest()
         con.executemany("INSERT INTO build_info VALUES (?, ?)", [
             ("ragite_version", rg["version"]),
             ("ragite_sha256", sha256_file(lib)),
