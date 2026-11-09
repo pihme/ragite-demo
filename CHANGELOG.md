@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.4...ragite-demo/v1.0.5) (2026-11-09)
+
+
+### Fixed
+
+* **ci:** do not mark PRs failed when a label-wake batch is superseded ([#57](https://github.com/pihme/ragite-demo/issues/57)) ([013cdf2](https://github.com/pihme/ragite-demo/commit/013cdf22862fffcb2a71dbe2aa765b8c57782633))
+
 ## [1.0.4](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.3...ragite-demo/v1.0.4) (2026-11-09)
 
 
