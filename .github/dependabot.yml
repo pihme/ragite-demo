@@ -21,6 +21,8 @@ updates:
       actions-minor-and-patch:
         update-types: [minor, patch]
 
+  # Runtime deps (requirements.txt, e.g. datasette) serve the demo: fix(deps), patch release.
+  # Dev deps (requirements-dev.txt: tests, coverage, Playwright): chore(deps-dev), no release.
   - package-ecosystem: pip
     directory: /
     schedule:
@@ -29,10 +31,15 @@ updates:
     open-pull-requests-limit: 5
     labels: [dependencies, ready-for-maintainer]
     commit-message:
-      prefix: chore
+      prefix: fix
+      prefix-development: chore
       include: scope
     groups:
       pip-minor-and-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+      pip-dev-minor-and-patch:
+        dependency-type: development
         update-types: [minor, patch]
   # All Nix shells in one block and one group: one bundled PR per run.
   # Add every extra shell (nix/<name>/flake.lock) under `directories:`.
