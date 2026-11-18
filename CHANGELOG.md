@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.5](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.4...ragite-demo/v1.0.5) (2026-11-18)
+
+
+### Fixed
+
+* **ci:** do not mark PRs failed when a label-wake batch is superseded ([#57](https://github.com/pihme/ragite-demo/issues/57)) ([013cdf2](https://github.com/pihme/ragite-demo/commit/013cdf22862fffcb2a71dbe2aa765b8c57782633))
+* **deps:** bump the nix group across 3 directories with 1 update ([#59](https://github.com/pihme/ragite-demo/issues/59)) ([9d7ea58](https://github.com/pihme/ragite-demo/commit/9d7ea58e81272486eed1414c9c6e20c8d5d80ec2))
+* **deps:** bump the nix group across 3 directories with 1 update ([#68](https://github.com/pihme/ragite-demo/issues/68)) ([c0de523](https://github.com/pihme/ragite-demo/commit/c0de523616b6ade5dec891a3771d05ed4c6ff5e4))
+
 ## [1.0.4](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.3...ragite-demo/v1.0.4) (2026-11-09)
 
 
