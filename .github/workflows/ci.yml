@@ -69,13 +69,17 @@ jobs:
         with:
           name: screenshots
           path: screenshots/
+          # Visual check for PR review; not used by later jobs or releases.
+          retention-days: 14
       - uses: actions/upload-artifact@v7
         with:
           name: demo-db
           path: |
             app/demo.db
             DATA_SOURCES.md
-          retention-days: 14
+          # Same-run release attach plus a few days to rerun a failed release
+          # job. The long-lived copy is the GitHub Release asset.
+          retention-days: 7
       - name: Datasette log
         if: always()
         run: cat datasette.log || true
