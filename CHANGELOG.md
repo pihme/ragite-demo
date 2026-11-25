@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.6](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.5...ragite-demo/v1.0.6) (2026-11-25)
+
+
+### Fixed
+
+* **deps:** bump datasette from 0.65.5 to 0.65.6 in the pip-minor-and-patch group ([#72](https://github.com/pihme/ragite-demo/issues/72)) ([b2e8ba2](https://github.com/pihme/ragite-demo/commit/b2e8ba2f00d5e5e76f603984036cd8b6483ec66a))
+* **deps:** bump the nix group across 3 directories with 1 update ([#74](https://github.com/pihme/ragite-demo/issues/74)) ([7932557](https://github.com/pihme/ragite-demo/commit/79325570ea8e2a3e4e14f89cb5d321d86755879b))
+
 ## [1.0.5](https://github.com/pihme/ragite-demo/compare/ragite-demo/v1.0.4...ragite-demo/v1.0.5) (2026-11-18)
 
 
