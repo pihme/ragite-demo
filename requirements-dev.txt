@@ -1,6 +1,6 @@
 -r requirements.txt
 pytest==9.2.0
 pytest-asyncio==1.5.0
-PyYAML==6.0.3
-coverage==7.17.3
+PyYAML==6.0.4
+coverage==7.17.4
 playwright==1.65.2
