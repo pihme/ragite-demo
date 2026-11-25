@@ -1,2 +1,2 @@
 # Runtime: serve the demo
-datasette==0.65.5
+datasette==0.65.6
